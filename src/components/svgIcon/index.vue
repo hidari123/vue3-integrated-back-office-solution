@@ -10,7 +10,7 @@
 <!--  aria-hidden 让元素对浏览器语义化隐藏-->
   <svg v-else class="svg-icon" :class="className" aria-hidden="true">
 <!--    svg元素 定义资源的链接-->
-    <use :xlink:href="iconName" />
+    <use :href="iconName" />
   </svg>
 </template>
 
