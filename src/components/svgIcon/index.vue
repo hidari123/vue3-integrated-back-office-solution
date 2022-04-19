@@ -1,10 +1,17 @@
 <template>
 <!--  展示外部图标-->
-  <div v-if="external" :style="styleExternalIcon" class="svg-external-icon svg-icon" :class="className"></div>
+  <div
+    v-if="isExternal"
+    :style="styleExternalIcon"
+    class="svg-external-icon svg-icon"
+    :class="className"
+  />
 <!--  展示内部图标-->
-  <div v-else class="svg-icon" :class="className" aria-hidden="true">
-    <use :xlink:herf="iconName" />
-  </div>
+<!--  aria-hidden 让元素对浏览器语义化隐藏-->
+  <svg v-else class="svg-icon" :class="className" aria-hidden="true">
+<!--    svg元素 定义资源的链接-->
+    <use :xlink:href="iconName" />
+  </svg>
 </template>
 
 <script setup>
@@ -26,7 +33,7 @@ const props = defineProps({
 /**
  * 判断当前图标是否为外部图标
  */
-computed(() => external(props.icon))
+const isExternal = computed(() => external(props.icon))
 /**
  * 外部图标样式
  */

@@ -1,28 +1,26 @@
 <template>
   <div class="login-container">
-    <el-form class="login-form">
+    <el-form class="login-form" :model="loginForm" :rules="loginRules">
       <div class="title-container">
         <h3 class="title">用户登录</h3>
       </div>
 <!--      username-->
-      <el-form-item>
+      <el-form-item prop="username">
         <span class="svg-container">
-            <svg-icon icon="https://res.lgdsunday.club/user.svg"></svg-icon>
+            <svg-icon icon="user" />
         </span>
-        <el-input placeholder="username" name="username" type="text"></el-input>
+        <el-input placeholder="username" name="username" type="text" v-model="loginForm.username"></el-input>
       </el-form-item>
 <!--      password-->
-      <el-form-item>
+      <el-form-item prop="password">
         <span class="svg-container">
-          <el-icon>
-            <avatar />
-          </el-icon>
+            <svg-icon icon="password" />
         </span>
-        <el-input placeholder="password" name="password" type="password"></el-input>
-        <span class="show-pwd">
-          <el-icon>
-            <avatar />
-          </el-icon>
+        <el-input placeholder="password" name="password" :type="passwordType" v-model="loginForm.password"></el-input>
+        <span class="show-pwd" @click="onChangePwdType">
+        <span class="svg-container">
+            <svg-icon :icon="passwordType === 'password' ? 'eye' : 'eye-open'" />
+        </span>
         </span>
       </el-form-item>
 <!--      登录按钮-->
@@ -33,9 +31,42 @@
 
 <script setup>
 // 导入的组件可以直接使用
-import SvgIcon from '@/components/svgIcon'
-import { Avatar } from '@element-plus/icons'
-import {} from 'vue'
+import { ref } from 'vue'
+import { validatePassword } from '@/views/login/rules'
+// 数据源
+const loginForm = ref({
+  username: 'super-admin',
+  password: '123456'
+})
+// 验证规则
+const loginRules = ref({
+  username: [
+    {
+      required: true,
+      trigger: 'blur',
+      message: '用户名为必填项'
+    }
+  ],
+  password: [
+    {
+      required: true,
+      trigger: 'blur',
+      validator: validatePassword()
+    }
+  ]
+})
+
+// 处理密码框文本显示
+const passwordType = ref('password')
+// template 中绑定的方法 => 直接声明即可
+const onChangePwdType = () => {
+  // 当 passwordType === password => text
+  if (passwordType.value === 'password') {
+    passwordType.value = 'text'
+  } else {
+    passwordType.value = 'password'
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -82,6 +113,20 @@ $cursor: #fff;
       }
     }
   }
+
+  .tips {
+    font-size: 16px;
+    line-height: 28px;
+    color: #fff;
+    margin-bottom: 10px;
+
+    span {
+      &:first-of-type {
+        margin-right: 16px;
+      }
+    }
+  }
+
   .svg-container {
     padding: 6px 5px 6px 15px;
     color: $dark_gray;
@@ -99,12 +144,22 @@ $cursor: #fff;
       text-align: center;
       font-weight: bold;
     }
+
+    ::v-deep .lang-select {
+      position: absolute;
+      top: 4px;
+      right: 0;
+      background-color: white;
+      font-size: 22px;
+      padding: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
   }
 
   .show-pwd {
     position: absolute;
     right: 10px;
-    top: 7px;
     font-size: 16px;
     color: $dark_gray;
     cursor: pointer;
