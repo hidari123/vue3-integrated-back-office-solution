@@ -7,6 +7,8 @@ import installElementPlus from './plugins/element'
 import '@/assets/style/common.scss'
 // 导入 svgIcon
 import installIcons from '@/icons'
+// 导入路由鉴权
+import './promission.js'
 
 const app = createApp(App)
 installElementPlus(app)

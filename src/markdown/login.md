@@ -591,3 +591,466 @@ const onChangePwdType = () => {
 }
 </script>
 ```
+
+## 通用后台登录方案解析
+
+处理完了表单的基本操作之后，接下来就是登录操作的实现了。
+
+对于登录操作在后台项目中是一个通用的解决方案，具体可以分为以下几点：
+
+1. 封装 `axios` 模块
+2. 封装 接口请求 模块
+3. 封装登录请求动作
+4. 保存服务端返回的 `token`
+5. 登录鉴权
+
+这些内容就共同的组成了一套 **后台登录解决方案** 。
+
+
+### 配置环境变量封装 axios 模块
+
+首先我们先去完成第一步：封装 `axios` 模块。
+
+在当前这个场景下，我们希望封装出来的 `axios` 模块，至少需要具备一种能力，那就是：**根据当前模式的不同，设定不同的 `BaseUrl`** ，因为通常情况下企业级项目在 **开发状态** 和 **生产状态** 下它的 `baseUrl` 是不同的。
+
+对于 `@vue/cli` 来说，它具备三种不同的模式：
+
+1. `development`
+2. `test`
+3. `production`
+
+具体可以点击 [这里](https://cli.vuejs.org/zh/guide/mode-and-env.html#%E6%A8%A1%E5%BC%8F) 进行参考。
+
+根据我们前面所提到的 **开发状态和生产状态** 那么此时我们的 `axios` 必须要满足：**在 开发 || 生产 状态下，可以设定不同 `BaseUrl` 的能力**
+
+那么想要解决这个问题，就必须要使用到 `@vue/cli` 所提供的 [环境变量](https://cli.vuejs.org/zh/guide/mode-and-env.html#%E6%A8%A1%E5%BC%8F) 来去进行实现。
+
+我们可以在项目中创建两个文件：
+
+1. `.env.development`
+2. `.env.production`
+
+它们分别对应 **开发状态** 和 **生产状态**。
+
+我们可以在上面两个文件中分别写入以下代码：
+
+**`.env.development`**：
+
+```
+# 标志
+ENV = 'development'
+
+# base api
+VUE_APP_BASE_API = '/api'
+```
+
+**`.env.production`：**
+
+```
+# 标志
+ENV = 'production'
+
+# base api
+VUE_APP_BASE_API = '/prod-api'
+```
+
+有了这两个文件之后，我们就可以创建对应的 `axios` 模块
+
+创建 `utils/request.js` ，写入如下代码：
+
+```js
+import axios from 'axios'
+
+const service = axios.create({
+  baseURL: process.env.VUE_APP_BASE_API,
+  timeout: 5000
+})
+
+export default service
+```
+
+### 封装请求动作
+
+有了 `axios` 模块之后，接下来我们就可以
+
+1. 封装接口请求模块
+2. 封装登录请求动作
+
+**封装接口请求模块：**
+
+创建 `api` 文件夹，创建 `sys.js`：
+
+```js
+import request from '@/utils/request'
+
+/**
+ * 登录
+ */
+export const login = data => {
+  return request({
+    url: '/sys/login',
+    method: 'POST',
+    data
+  })
+}
+```
+
+**封装登录请求动作：**
+
+该动作我们期望把它封装到 `vuex` 的 `action` 中
+
+在 `store` 下创建 `modules` 文件夹，创建 `user.js` 模块，用于处理所有和 **用户相关** 的内容（此处需要使用第三方包 `md5` ）：
+
+```js
+import { login } from '@/api/sys'
+import MD5 from 'md5'
+export default {
+  namespaced: true,
+  state: () => ({}),
+  mutations: {},
+  actions: {
+    /**
+     * 登录请求动作
+     * @param context
+     * @param userInfo
+     * @returns {Promise<unknown>}
+     */
+    login (context, userInfo) {
+      const { username, password } = userInfo
+      // 无论是登录成功还是失败 希望在组件中对应处理
+      return new Promise((resolve, reject) => {
+        login({
+          username,
+          password: MD5(password)
+        }).then(data => {
+          resolve()
+        }).catch(err => {
+          reject(err)
+        })
+      })
+    }
+  }
+}
+
+```
+
+在 `store/index` 中完成注册：
+
+```js
+import { createStore } from 'vuex'
+import user from './modules/user.js'
+export default createStore({
+  modules: {
+    user
+  }
+})
+```
+
+### 登录触发动作
+
+在 `login` 中，触发定义的 `action`
+
+```vue
+<template>
+	<el-button
+        type="primary"
+        style="width: 100%; margin-bottom: 30px"
+        :loading="loading"
+        @click="handleLogin"
+        >登录</el-button
+      >
+</template>
+<script setup>
+import { ref } from 'vue'
+import { validatePassword } from './rules'
+import { useStore } from 'vuex'
+...
+
+// 登录动作处理
+const loading = ref(false)
+const loginFromRef = ref(null)
+const store = useStore()
+const handleLogin = () => {
+  loginFromRef.value.validate(valid => {
+    if (!valid) return
+
+    loading.value = true
+    store
+      .dispatch('user/login', loginForm.value)
+      .then(() => {
+        loading.value = false
+        // TODO: 登录后操作
+      })
+      .catch(err => {
+        console.log(err)
+        loading.value = false
+      })
+  })
+}
+</script>
+```
+
+触发之后会得到以下错误：
+
+![image-20210910172203852](第三章：项目架构之搭建登录架 构解决方案与实现.assets/image-20210910172203852.png)
+
+该错误表示，我们当前请求的接口不存在。
+
+出现这个问题的原因，是因为我们在前面配置环境变量时指定了 **开发环境下**，请求的 `BaseUrl` 为 `/api` ，所以我们真实发出的请求为：`/api/sys/login` 。
+
+这样的一个请求会被自动键入到当前前端所在的服务中，所以我们最终就得到了 `http://192.168.18.42:8081/api/sys/login` 这样的一个请求路径。
+
+而想要处理这个问题，那么可以通过指定 [webpack DevServer 代理](https://webpack.docschina.org/configuration/dev-server/) 的形式，代理当前的 `url` 请求。
+
+而指定这个代理非常简单，是一种近乎固定的配置方案。
+
+在 `vue.config.js` 中，加入以下代码：
+
+```js
+module.exports = {
+  devServer: {
+    // 配置反向代理
+    proxy: {
+      // 当地址中有/api的时候会触发代理机制
+      '/api': {
+        // 要代理的服务器地址  这里不用写 api
+        target: 'https://api.imooc-admin.lgdsunday.club/',
+        changeOrigin: true // 是否跨域
+      }
+    }
+  },
+  ...
+}
+
+```
+
+重新启动服务，再次进行请求，即可得到返回数据
+
+## 本地缓存处理方案
+
+通常情况下，在获取到 `token` 之后，我们会把 `token` 进行缓存，而缓存的方式将会分为两种：
+
+1. 本地缓存：`LocalStorage`
+2. 全局状态管理：`Vuex`
+
+保存在 `LocalStorage` 是为了方便实现 **自动登录功能**
+
+保存在 `vuex` 中是为了后面在其他位置进行使用
+
+那么下面我们就分别来实现对应的缓存方案：
+
+**LocalStorage：**
+
+1. 创建 `utils/storage.js` 文件，封装三个对应方法：
+
+```js
+/**
+ * 存储数据
+ */
+export const setItem = (key, value) => {
+  // value 分为两种情况
+  // 1. 复杂数据类型
+  // 2. 基本数据类型
+  if (typeof value === 'object') {
+    value = JSON.stringify(value)
+  }
+  window.localStorage.setItem(key, value)
+}
+
+/**
+ * 读取数据
+ */
+export const getItem = (key) => {
+  const data = window.localStorage.getItem(key)
+  // 用 if 判断是否为复杂类型的字符串形势比较麻烦 用 try catch
+  try {
+    return JSON.parse(data)
+  } catch (e) {
+    return data
+  }
+}
+
+/**
+ * 删除指定数据
+ */
+export const removeItem = (key) => {
+  window.localStorage.removeItem(key)
+}
+
+/**
+ * 删除所有数据
+ */
+export const removeAllItem = () => {
+  window.localStorage.clear()
+}
+```
+
+2. 在 `vuex` 的 `user` 模块下，处理 `token` 的保存
+
+```js
+import { login } from '@/api/sys'
+import MD5 from 'md5'
+import { setItem, getItem } from '@/utils/storage'
+import { TOKEN } from '@/constant'
+export default {
+  namespaced: true,
+  state: () => ({
+    // 要完成自动登录 所以这里不能放空字符串
+    token: getItem(TOKEN) || ''
+  }),
+  mutations: {
+    setToken (state, token) {
+      state.token = token
+      setItem(TOKEN, token)
+    }
+  },
+  actions: {
+    /**
+     * 登录请求动作
+     * @param context
+     * @param userInfo
+     * @returns {Promise<unknown>}
+     */
+    login ({ commit }, userInfo) {
+      const { username, password } = userInfo
+      // 无论是登录成功还是失败 希望在组件中对应处理
+      return new Promise((resolve, reject) => {
+        login({
+          username,
+          // 密码防止传输时候破解用 md5 加密
+          password: MD5(password)
+        }).then(data => {
+          // 触发 mutation 模块存储 token
+          commit('setToken', data.token)
+          resolve()
+        }).catch(err => {
+          reject(err)
+        })
+      })
+    }
+  }
+}
+```
+
+3. 处理保存的过程中，需要创建 `constant` 常量目录 `constant/index.js`，方便维护
+```js
+// token 常量
+export const TOKEN = 'token'
+```
+
+此时，当点击登陆时，即可把 `token` 保存至 `vuex` 与  `localStorage` 中
+
+## 响应数据的统一处理
+
+通过 [axios 响应拦截器](http://axios-js.com/zh-cn/docs/index.html#%E6%8B%A6%E6%88%AA%E5%99%A8) 处理相应数据
+
+在 `utils/request.js` 中实现以下代码：
+
+```js
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+...
+// 响应拦截器
+// 两个值 成功 response 失败 err
+service.interceptors.response.use(
+  // 请求成功
+  response => {
+    const { success, message, data } = response.data
+    // 需要判断当前请求是否成功
+    if (success) {
+      // 成功返回解析后的数据
+      return data
+    } else {
+      // 失败（请求成功，业务失败）消息提示
+      ElMessage.error(message)
+      return Promise.reject(new Error(message))
+    }
+  }, error => {
+    // 请求失败
+    ElMessage.error(error.message)
+    return Promise.reject(new Error(error.message))
+  }
+)
+```
+
+此时，对于 `vuex 中的 user 模块` 就可以进行以下修改了：
+
+```js
+this.commit('user/setToken', data.token)
+```
+
+## 登录后操作
+在进行 **登录鉴权** 之前创建一个登录后的页面。
+
+1. 创建 `layout/index.vue` ：
+
+```vue
+   <template>
+     <div class="">Layout 页面</div>
+   </template>
+   
+   <script setup>
+   import {} from 'vue'
+   </script>
+   
+   <style lang="scss" scoped></style>
+   
+```
+
+2. 在 `router/index` 中，指定对应路由表：
+
+```js
+const publicRoutes = [
+...
+ {
+   path: '/',
+   component: () => import('@/layout/index')
+ }
+]
+```
+
+3. 在登录成功后，完成跳转
+
+```js
+// 登录后操作
+router.push('/')
+```
+
+## 登录鉴权解决方案
+
+> 当用户未登陆时，不允许进入除 `login` 之外的其他页面。
+>
+> 用户登录后，`token` 未过期之前，不允许进入 `login` 页面
+
+而想要实现这个功能，那么最好的方式就是通过 [路由守卫](https://router.vuejs.org/zh/guide/advanced/navigation-guards.html#%E5%85%A8%E5%B1%80%E5%89%8D%E7%BD%AE%E5%AE%88%E5%8D%AB) 来进行实现。
+
+在 `main.js` 平级，创建 `permission.js` 文件
+```js
+import router from './router'
+import store from './store'
+
+// 白名单
+const whiteList = ['/login']
+/**
+ * 路由前置守卫
+ */
+router.beforeEach(async (to, from, next) => {
+  // 存在 token ，进入主页
+  // if (store.state.user.token) {
+  // 快捷访问
+  if (store.getters.token) {
+    if (to.path === '/login') {
+      next('/')
+    } else {
+      next()
+    }
+  } else {
+    // 没有token的情况下，可以进入白名单
+    if (whiteList.indexOf(to.path) > -1) {
+      next()
+    } else {
+      next('/login')
+    }
+  }
+})
+```

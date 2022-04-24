@@ -32,9 +32,9 @@
 </template>
 
 <script setup>
-// import { test } from '@/api/sys.js'
 // 导入的组件可以直接使用
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { validatePassword } from '@/views/login/rules'
 // 数据源
@@ -75,13 +75,9 @@ const onChangePwdType = () => {
 // 处理登录
 const loading = ref(false)
 const store = useStore()
+const router = useRouter()
 const loginFormRef = ref(null)
 const handlerLogin = () => {
-  // test().then(data => {
-  //   console.log(data)
-  // }
-  // )
-
   // 进行表单校验
   loginFormRef.value.validate(valid => {
     if (!valid) return false
@@ -89,12 +85,13 @@ const handlerLogin = () => {
     loading.value = true
     store.dispatch('user/login', loginForm.value)
       .then(() => {
-        loading.value = true
+        loading.value = false
         // 进行登录后处理
+        router.push('/')
       })
       .catch(err => {
         console.log(err)
-        loading.value = false
+        loading.value = true
       })
   })
 }
