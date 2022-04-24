@@ -10,6 +10,14 @@
     - [使用 svg-sprite-loader 处理 svg 图标](#%E4%BD%BF%E7%94%A8-svg-sprite-loader-%E5%A4%84%E7%90%86-svg-%E5%9B%BE%E6%A0%87)
   - [完善登录表单校验](#%E5%AE%8C%E5%96%84%E7%99%BB%E5%BD%95%E8%A1%A8%E5%8D%95%E6%A0%A1%E9%AA%8C)
   - [密码框状态通用处理](#%E5%AF%86%E7%A0%81%E6%A1%86%E7%8A%B6%E6%80%81%E9%80%9A%E7%94%A8%E5%A4%84%E7%90%86)
+  - [通用后台登录方案解析](#%E9%80%9A%E7%94%A8%E5%90%8E%E5%8F%B0%E7%99%BB%E5%BD%95%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90)
+    - [配置环境变量封装 axios 模块](#%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E5%B0%81%E8%A3%85-axios-%E6%A8%A1%E5%9D%97)
+    - [封装请求动作](#%E5%B0%81%E8%A3%85%E8%AF%B7%E6%B1%82%E5%8A%A8%E4%BD%9C)
+    - [登录触发动作](#%E7%99%BB%E5%BD%95%E8%A7%A6%E5%8F%91%E5%8A%A8%E4%BD%9C)
+  - [本地缓存处理方案](#%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98%E5%A4%84%E7%90%86%E6%96%B9%E6%A1%88)
+  - [响应数据的统一处理](#%E5%93%8D%E5%BA%94%E6%95%B0%E6%8D%AE%E7%9A%84%E7%BB%9F%E4%B8%80%E5%A4%84%E7%90%86)
+  - [登录后操作](#%E7%99%BB%E5%BD%95%E5%90%8E%E6%93%8D%E4%BD%9C)
+  - [登录鉴权解决方案](#%E7%99%BB%E5%BD%95%E9%89%B4%E6%9D%83%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
