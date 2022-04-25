@@ -4,7 +4,7 @@ import router from './router'
 import store from './store'
 import installElementPlus from './plugins/element'
 // 初始化样式表
-import '@/assets/style/common.scss'
+import '@/styles/index.scss'
 // 导入 svgIcon
 import installIcons from '@/icons'
 // 导入路由鉴权
