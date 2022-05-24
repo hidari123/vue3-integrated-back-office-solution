@@ -1,3 +1,11 @@
+/*
+ * @Author: lijiaying 1640106564@qq.com
+ * @Date: 2022-05-24 09:08:25
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-05-24 09:16:07
+ * @FilePath: \vue3-integrated-back-office-solution\vue.config.js
+ * @Description: 配置文件
+ */
 const path = require('path')
 function resolve (dir) {
   return path.join(__dirname, dir)
@@ -10,11 +18,11 @@ module.exports = {
       // 当地址中有/api的时候会触发代理机制
       '/api': {
         // 要代理的服务器地址  这里不用写 api
-        target: 'http://n2365r8383.wicp.vip/',
-        changeOrigin: true // 是否跨域
-        // pathRewrite: {
-        //   ['^' + '/api']: ''
-        // }
+        target: 'http://127.0.0.1:4523/mock/1019677/',
+        changeOrigin: true, // 是否跨域
+        pathRewrite: {
+          ['^' + '/api']: ''
+        }
       }
     }
   },
