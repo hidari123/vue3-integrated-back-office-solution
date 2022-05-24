@@ -1,3 +1,13 @@
+<!--
+ * @Author: hidari
+ * @Date: 2022-05-24 09:08:25
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-05-24 10:38:02
+ * @FilePath: \vue3-integrated-back-office-solution\src\layout\components\Sidebar\SidebarItem.vue
+ * @Description: 左侧菜单item项（含children）
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
+-->
 <template>
   <!-- 支持渲染多级 menu 菜单 -->
   <el-submenu v-if="route.children && route.children.length > 0" :index="route.path">

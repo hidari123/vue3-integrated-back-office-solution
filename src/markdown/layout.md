@@ -16,6 +16,16 @@
     - [创建结构路由表](#%E5%88%9B%E5%BB%BA%E7%BB%93%E6%9E%84%E8%B7%AF%E7%94%B1%E8%A1%A8)
     - [解析路由表，获取结构化数据](#%E8%A7%A3%E6%9E%90%E8%B7%AF%E7%94%B1%E8%A1%A8%E8%8E%B7%E5%8F%96%E7%BB%93%E6%9E%84%E5%8C%96%E6%95%B0%E6%8D%AE)
     - [生成动态 menu 菜单](#%E7%94%9F%E6%88%90%E5%8A%A8%E6%80%81-menu-%E8%8F%9C%E5%8D%95)
+  - [左侧菜单伸缩功能](#%E5%B7%A6%E4%BE%A7%E8%8F%9C%E5%8D%95%E4%BC%B8%E7%BC%A9%E5%8A%9F%E8%83%BD)
+    - [动画逻辑和伸缩实现](#%E5%8A%A8%E7%94%BB%E9%80%BB%E8%BE%91%E5%92%8C%E4%BC%B8%E7%BC%A9%E5%AE%9E%E7%8E%B0)
+    - [SidebarHeader 处理](#sidebarheader-%E5%A4%84%E7%90%86)
+    - [全新 vue 能力：组件状态驱动的动态 CSS 值](#%E5%85%A8%E6%96%B0-vue-%E8%83%BD%E5%8A%9B%E7%BB%84%E4%BB%B6%E7%8A%B6%E6%80%81%E9%A9%B1%E5%8A%A8%E7%9A%84%E5%8A%A8%E6%80%81-css-%E5%80%BC)
+  - [动态面包屑](#%E5%8A%A8%E6%80%81%E9%9D%A2%E5%8C%85%E5%B1%91)
+    - [方案分析](#%E6%96%B9%E6%A1%88%E5%88%86%E6%9E%90)
+    - [渲染基本的面包屑组件](#%E6%B8%B2%E6%9F%93%E5%9F%BA%E6%9C%AC%E7%9A%84%E9%9D%A2%E5%8C%85%E5%B1%91%E7%BB%84%E4%BB%B6)
+    - [动态计算面包屑结构数据](#%E5%8A%A8%E6%80%81%E8%AE%A1%E7%AE%97%E9%9D%A2%E5%8C%85%E5%B1%91%E7%BB%93%E6%9E%84%E6%95%B0%E6%8D%AE)
+    - [渲染面包屑](#%E6%B8%B2%E6%9F%93%E9%9D%A2%E5%8C%85%E5%B1%91)
+    - [vue3 动画处理](#vue3-%E5%8A%A8%E7%94%BB%E5%A4%84%E7%90%86)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -153,13 +163,13 @@
    #app {
      .main-container {
        min-height: 100%;
-       transition: margin-left 0.28s;
+       transition: margin-left #{$sideBarDuration};
        margin-left: $sideBarWidth;
        position: relative;
      }
    
      .sidebar-container {
-       transition: width 0.28s;
+       transition: width #{$sideBarDuration};
        width: $sideBarWidth !important;
        height: 100%;
        position: fixed;
@@ -1755,3 +1765,571 @@ const activeMenu = computed(() => {
 ```
 
 至此整个 **动态`menu`完成**
+
+
+## 左侧菜单伸缩功能
+
+### 动画逻辑和伸缩实现
+
+ **左侧菜单伸缩** 对于这个功能核心的点在于动画处理样式的改变总是由数据进行驱动，所以首先我们去创建对应的数据
+
+创建 `store/app` 模块，写入如下代码
+
+```js
+export default {
+  namespaced: true,
+  state: () => ({
+    // sidebar是否打开
+    sidebarOpened: true
+  }),
+  mutations: {
+    /**
+       * 控制打开/关闭sidebar
+       * @param {*} state
+       */
+    triggerSidebarOpened (state) {
+      state.sidebarOpened = !state.sidebarOpened
+    }
+  }
+}
+```
+
+在 `store/index` 中进行导入
+
+```js
+...
+import app from './modules/app'
+export default createStore({
+  getters,
+  modules: {
+    ...
+    app
+  }
+})
+```
+
+在 `store/getters` 中创建快捷访问
+
+```js
+  /**
+   * 左侧菜单伸缩状态
+   * @param {*} state
+   * @returns
+   */
+  sidebarOpened: state => state.app.sidebarOpened
+```
+
+创建 `components/hamburger` 组件，用来控制数据
+
+```vue
+<template>
+  <div class="hamburger-container" @click="toggleClick">
+      <svg-icon class="hamburger" :icon="icon"></svg-icon>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import { useStore } from 'vuex'
+const store = useStore()
+/**
+ * 点击时触发改变状态事件
+ */
+const toggleClick = () => {
+  store.commit('app/triggerSidebarOpened')
+}
+/**
+ * 根据左侧菜单是否伸缩动态展示 icon
+ */
+const icon = computed(() => {
+  return store.getters.sidebarOpened ? 'hamburger-opened' : 'hamburger-closed'
+})
+</script>
+
+<style lang="scss" scoped>
+.hamburger-container {
+    padding: 0 16px;
+    .hamburger {
+        display: inline-block;
+        vertical-align: middle;
+        width: 20px;
+        height: 20px;
+    }
+}
+</style>
+```
+
+在 `navbar` 中使用该组件
+
+```vue
+<template>
+  <div class="navbar">
+    <hamburger class="hamburger-container" />
+    ...
+  </div>
+</template>
+
+<script setup>
+import Hamburger from '@/components/Hamburger'
+...
+</script>
+
+<style lang="scss" scoped>
+.navbar {
+  ...
+
+  .hamburger-container {
+    line-height: 46px;
+    height: 100%;
+    float: left;
+    cursor: pointer;
+    // hover 动画
+    transition: background 0.5s;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+ ...
+}
+</style>
+
+```
+
+在 `SidebarMenu` 中，控制 `el-menu` 的 [collapse](https://element-plus.org/#/zh-CN/component/menu) 属性
+
+```vue
+<el-menu
+    :collapse="!$store.getters.sidebarOpened"
+    ...
+```
+
+在 `layout/index` 中指定 **整个侧边栏的宽度和缩放动画**
+
+```vue
+<div
+    class="app-wrapper"
+    :class="[$store.getters.sidebarOpened ? 'openSidebar' : 'hideSidebar']"
+  >
+  ...
+```
+
+在 `layout/index` 中 处理 `navbar` 的宽度
+
+```vue
+<style lang="scss" scoped>
+...
+
+.fixed-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 9;
+  width: calc(100% - #{$sideBarWidth});
+  transition: width 0.28s;
+}
+
+.hideSidebar .fixed-header {
+  width: calc(100% - #{$hideSideBarWidth});
+}
+</style>
+```
+
+在 `styles/variables.scss` 中指定 `hideSideBarWidth`
+
+```scss
+$hideSideBarWidth: 54px;
+```
+
+### SidebarHeader 处理
+
+在 `sidebar/index` 中写入如下代码
+
+```vue
+<template>
+  <div class="">
+    <div class="logo-container">
+      <el-avatar
+        :size="logoHeight"
+        shape="square"
+        src="https://m.imooc.com/static/wap/static/common/img/logo-small@2x.png"
+      />
+      <h1 class="logo-title" v-if="$store.getters.sidebarOpened">
+        hidari-admin
+      </h1>
+    </div>
+    ...
+  </div>
+</template>
+
+<script setup>
+import SidebarMenu from './SidebarMenu'
+import {} from 'vue'
+const logoHeight = 44
+</script>
+
+<style lang="scss" scoped>
+.logo-container {
+  height: v-bind(logoHeight) + 'px';
+  padding: 10px 0 22px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .logo-title {
+    margin-left: 10px;
+    color: #fff;
+    font-weight: 600;
+    line-height: 50px;
+    font-size: 16px;
+    white-space: nowrap;
+  }
+}
+</style>
+```
+
+创建 `styles/element.scss` 文件，统一处理 `el-avatar` 的背景问题
+
+```scss
+.el-avatar {
+  --el-avatar-background-color: none;
+}
+```
+
+在 `styles/index.scss` 中导入
+
+```scss
+...
+@import './element.scss';
+```
+
+统一处理下动画时长的问题，在 `styles/variables.scss` 中，加入以下变量
+
+```scss
+$sideBarDuration: 0.28s;
+```
+
+为 `styles/sidebar.scss` 修改时长
+
+```scss
+  .main-container {
+    transition: margin-left #{$sideBarDuration};
+   ...
+  }
+
+  .sidebar-container {
+    transition: width #{$sideBarDuration};
+  	...
+  }
+```
+
+为 `layout/index` 修改样式
+
+```scss
+.fixed-header {
+  ...
+  transition: width #{$sideBarDuration};
+}
+```
+
+### 全新 vue 能力：组件状态驱动的动态 CSS 值
+
+在 [vue 3.2](https://blog.vuejs.org/posts/vue-3.2.html) 最新更新中，除了 **响应式变化** 之外，还有另外一个很重要的更新，那就是 **组件状态驱动的动态 `CSS` 值** ，对应的文档 [点击这里](https://v3.vuejs.org/api/sfc-style.html#state-driven-dynamic-css) 查看
+
+下面就使用下最新的特性，来为 `logo-container` 指定下高度：
+
+```vue
+<template>
+ ...
+ <el-avatar
+ 	:size="logoHeight"
+ ...
+
+</template>
+
+<script setup>
+...
+const logoHeight = 44
+</script>
+
+<style lang="scss" scoped>
+.logo-container {
+  height: v-bind(logoHeight) + 'px';
+...
+}
+</style>
+
+```
+
+## 动态面包屑
+
+### 方案分析
+
+**面包屑导航**，分为：
+
+1. 静态面包屑
+2. 动态面包屑
+
+**静态面包屑：**
+
+指的是：**在每个页面中写死对应的面包屑菜单**，缺点也很明显：
+
+1. 每个页面都得写一遍
+2. 页面路径结构变化了，得手动更改
+
+简单来说就是 **不好维护，不好扩展** 。
+
+**动态面包屑：**
+
+**根据当前的 `url` 自动生成面包屑导航菜单**
+
+无论之后路径发生了什么变化，**动态面包屑** 都会正确的进行计算
+
+那么在后面的实现过程中，我们将会分成三大步来实现
+
+1. 创建、渲染基本的面包屑组件
+2. 计算面包屑结构数据
+3. 根据数据渲染动态面包屑内容
+
+### 渲染基本的面包屑组件
+
+完成第一步，先去创建并渲染出基本的 [面包屑](https://element-plus.org/#/zh-CN/component/breadcrumb) 组件
+
+创建 `components/Breadcrumb/index`，并写入如下代码：
+
+```vue
+<template>
+  <el-breadcrumb class="breadcrumb" separator="/">
+    <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+    <el-breadcrumb-item><a href="/">活动管理</a></el-breadcrumb-item>
+    <el-breadcrumb-item>活动列表</el-breadcrumb-item>
+    <!-- 面包屑的最后一项 -->
+    <el-breadcrumb-item>
+      <span class="no-redirect">活动详情</span>
+    </el-breadcrumb-item>
+  </el-breadcrumb>
+</template>
+
+<script setup>
+import {} from 'vue'
+</script>
+
+<style lang="scss" scoped>
+.breadcrumb {
+  display: inline-block;
+  font-size: 14px;
+  line-height: 50px;
+  margin-left: 8px;
+
+  ::v-deep .no-redirect {
+    color: #97a8be;
+    cursor: text;
+  }
+}
+</style>
+
+```
+
+在 `layout/components/Navbar` 组件下导入
+
+```vue
+<template>
+  <div class="navbar">
+    <hamburger class="hamburger-container" />
+    <breadcrumb class="breadcrumb-container" />
+	...
+  </div>
+</template>
+...
+
+<style lang="scss" scoped>
+.navbar {
+ ...
+
+  .breadcrumb-container {
+    float: left;
+  }
+   ...
+}
+</style>
+
+```
+
+### 动态计算面包屑结构数据
+
+现在的静态面包屑分成了两个组件：
+
+1. `el-breadcrumb`：包裹性质的容器
+2. `el-breadcrumb-item`：每个单独项
+
+如果想要完成动态的，就需要 **依据动态数据，渲染`el-breadcrumb-item`**
+
+步骤：
+
+1. 动态数据
+2. 渲染 `el-breadcrumb-item`
+
+- **动态数据如何制作**
+
+可以制作出一个 **数组**，数组中每个 `item` 都表示一个 **路由信息**：
+
+创建一个方法，用来生成数组数据，要使用到 [route.match](https://next.router.vuejs.org/zh/api/#matched) 属性来：**获取与给定路由地址匹配的[标准化的路由记录](https://next.router.vuejs.org/zh/api/#routerecord)数组**
+
+```vue
+<script setup>
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+
+// 监听路由变化
+const route = useRoute()
+
+// 生成数组数据
+const breadcrumbData = ref([])
+/**
+ * 获取与给定路由地址匹配的标准化的路由记录数组
+ */
+const getBreadcrumbData = () => {
+  // 当前路由的标准化路由记录
+  breadcrumbData.value = route.matched.filter(
+    item => item.meta && item.meta.title
+  )
+}
+/**
+ * 监听路由变化时触发
+ */
+watch(route, () => {
+  getBreadcrumbData()
+}, {
+  immediate: true
+})
+</script>
+```
+
+### 渲染面包屑
+
+```vue
+<template>
+  <el-breadcrumb separator="/" class="breadcrumb">
+  <transition-group name="breadcrumb">
+    <el-breadcrumb-item v-for="(item,index) in breadcrumbData" :key="item.path">
+        <!-- 不可点击 -->
+        <!-- 如果是最后一个 则不可点击 -->
+        <span
+        class="no-redirect"
+        v-if="index === breadcrumbData.length - 1"
+        >{{item.meta.title}}</span>
+        <!-- 可点击 -->
+        <span v-else class="redirect" @click="onLickClick(item)">{{item.meta.title}}</span>
+    </el-breadcrumb-item>
+  </transition-group>
+  </el-breadcrumb>
+</template>
+
+<script setup>
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+
+// 监听路由变化
+const route = useRoute()
+
+// 生成数组数据
+const breadcrumbData = ref([])
+/**
+ * 获取与给定路由地址匹配的标准化的路由记录数组
+ */
+const getBreadcrumbData = () => {
+  // 当前路由的标准化路由记录
+  breadcrumbData.value = route.matched.filter(
+    item => item.meta && item.meta.title
+  )
+}
+/**
+ * 监听路由变化时触发
+ */
+watch(route, () => {
+  getBreadcrumbData()
+}, {
+  immediate: true
+})
+
+// 跳转点击事件
+const router = useRouter()
+const onLickClick = (item) => {
+  router.push(item.path)
+}
+
+// 将来需要主题替换 所以 hover 颜色 设置为主色
+const store = useStore()
+const linkHoverColor = ref(store.getters.cssVar.menuBg)
+</script>
+
+<style lang="scss" scoped>
+.breadcrumb {
+  display: inline-block;
+  font-size: 14px;
+  line-height: 50px;
+  margin-left: 8px;
+  .no-redirect {
+    color: #97a8be;
+    cursor: text;
+  }
+
+  .redirect {
+    color: #666;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover{
+        color: v-bind(linkHoverColor)
+    }
+  }
+}
+</style>
+```
+
+### vue3 动画处理
+
+vue3对 [动画](https://v3.cn.vuejs.org/guide/transitions-overview.html#%E5%9F%BA%E4%BA%8E-class-%E7%9A%84%E5%8A%A8%E7%94%BB%E5%92%8C%E8%BF%87%E6%B8%A1) 进行了一些修改（[vue 动画迁移文档](https://v3.cn.vuejs.org/guide/migration/transition.html#%E6%A6%82%E8%A7%88)）
+
+主要的修改其实只有两个：
+
+1. 过渡类名 `v-enter` 修改为 `v-enter-from`
+2. 过渡类名 `v-leave` 修改为 `v-leave-from`
+
+依据修改之后的动画，为面包屑增加一些动画样式：
+1. 在 `Breadcrumb/index` 中增加 `transition-group`
+
+   ```vue
+   <template>
+     <el-breadcrumb class="breadcrumb" separator="/">
+       <transition-group name="breadcrumb">
+         ...
+       </transition-group>
+     </el-breadcrumb>
+   </template>
+   ```
+
+2. 新建 `styles/transition` 样式文件
+
+   ```scss
+   .breadcrumb-enter-active,
+   .breadcrumb-leave-active {
+     transition: all 0.5s;
+   }
+   
+   .breadcrumb-enter-from,
+   .breadcrumb-leave-active {
+     opacity: 0;
+     transform: translateX(20px);
+   }
+   
+   .breadcrumb-leave-active {
+     position: absolute;
+   }
+   ```
+
+3. 在 `styles/index` 中导入
+
+   ```scss
+   @import './transition.scss';
+   ```

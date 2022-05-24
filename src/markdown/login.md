@@ -427,6 +427,26 @@ installIcons(app)
 ### 使用 svg-sprite-loader 处理 svg 图标
 [svg-sprite-loader](https://www.npmjs.com/package/svg-sprite-loader) 是 `webpack` 中专门用来处理 `svg` 图标的一个 `loader` ，在上一节中我们的图标之所有没有展示，就是因为我们缺少该 `loader`。
 
+- `svg-sprite-loader` 的官方解释是：一个用于创建 `svg` 雪碧图的 `Webpack` 加载器。这个加载器现在已经被 JetBrains 公司收录和维护了。通俗的讲：`svg-sprite-loader` 会把你引入的 `svg` 塞到一个个 `symbol` 中，合成一个大的 `svg`，最后将这个大的 `svg` 放入 `body` 中。`symbol` 的 `id` 如果不特别指定，就是你的文件名。在页面上形成这样的元素：
+
+```html
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         style="position: absolute; width: 0; height: 0" aria-hidden="true" 
+         id="__SVG_SPRITE_NODE__">
+        <symbol xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                class="icon" viewBox="0 0 1024 1024"
+                id="label">
+            <defs><style type="text/css"></style></defs>
+            <!-- path ... （path 中可能含有 fill 属性，也就是 svg 的自带颜色） -->
+        </symbol>
+        <!-- other symbols -->
+    </svg>
+</body>
+```
+
 那么想要使用该 `loader` 我们需要做两件事情：
 
 1. 下载该 `laoder`，执行：`npm i --save-dev svg-sprite-loader@6.0.9`

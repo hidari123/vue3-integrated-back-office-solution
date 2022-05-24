@@ -1,5 +1,14 @@
+/*
+ * @Author: hidari
+ * @Date: 2022-05-24 09:08:25
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-05-24 11:16:54
+ * @FilePath: \vue3-integrated-back-office-solution\src\store\getters.js
+ * @Description: 快捷访问
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
+ */
 import variables from '@/styles/variables.scss'
-// 快捷访问
 
 const getters = {
   /**
@@ -31,7 +40,13 @@ const getters = {
    * @param state
    * @returns {*}
    */
-  cssVar: state => variables
+  cssVar: state => variables,
+  /**
+   * 左侧菜单伸缩状态
+   * @param {*} state
+   * @returns
+   */
+  sidebarOpened: state => state.app.sidebarOpened
 }
 
 export default getters

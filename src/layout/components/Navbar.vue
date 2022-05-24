@@ -1,5 +1,19 @@
+<!--
+ * @Author: hidari
+ * @Date: 2022-05-24 09:08:25
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-05-24 11:48:26
+ * @FilePath: \vue3-integrated-back-office-solution\src\layout\components\Navbar.vue
+ * @Description: 主页面头部区域
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
+-->
 <template>
   <div class="navbar">
+    <!-- 汉堡 -->
+    <hamburger/>
+    <!-- 面包屑导航 -->
+    <breadcrumb class="breadcrumb-container" />
     <div class="right-menu">
       <!--      头像-->
       <el-dropdown class="avatar-container" trigger="click">
@@ -25,6 +39,8 @@
 
 <script setup>
 import { useStore } from 'vuex'
+import Hamburger from '@/components/hamburger'
+import Breadcrumb from '@/components/breadcrumb/index.vue'
 const store = useStore()
 const logout = () => {
   store.dispatch('user/logout')
@@ -39,9 +55,26 @@ const logout = () => {
   background-color: #fff;
   box-shadow: 0 1px 4px rgba(0,21,41,0.08);
 
+  .hamburger-container {
+      line-height: 50px;
+      height: 100%;
+      float: left;
+      cursor: pointer;
+      // hover 动画
+      transition: background 0.5s;
+
+      &:hover {
+          background: rgba(0,0,0,0.1);
+      }
+  }
+
+  .breadcrumb-container{
+      float: left;
+  }
+
   .right-menu {
     display: flex;
-    align-item: center;
+    align-items: center;
     float: right;
     padding-right: 16px;
 

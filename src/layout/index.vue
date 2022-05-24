@@ -1,5 +1,17 @@
+<!--
+ * @Author: hidari
+ * @Date: 2022-05-24 09:08:25
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-05-24 11:17:41
+ * @FilePath: \vue3-integrated-back-office-solution\src\layout\index.vue
+ * @Description: 主页面容器
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
+-->
 <template>
-  <div class="app-wrapper">
+  <div class="app-wrapper"
+  :class="[$store.getters.sidebarOpened ? 'openSidebar' : 'hideSidebar']"
+  >
     <!--    左侧 menu-->
     <sidebar class="sidebar-container" :style="{ backgroundColor: variables.menuBg }"/>
     <div class="main-container">
@@ -37,5 +49,9 @@ import AppMain from './components/AppMain'
   right: 0;
   z-index: 9;
   width: calc(100% - #{$sideBarWidth});
+  transition: width #{$sideBarDuration};
+}
+.hideSidebar .fixed-header {
+  width: calc(100% - #{$hideSideBarWidth});
 }
 </style>
