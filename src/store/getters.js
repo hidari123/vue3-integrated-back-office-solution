@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 11:16:54
+ * @LastEditTime: 2022-05-24 13:48:13
  * @FilePath: \vue3-integrated-back-office-solution\src\store\getters.js
  * @Description: 快捷访问
  *
@@ -46,7 +46,13 @@ const getters = {
    * @param {*} state
    * @returns
    */
-  sidebarOpened: state => state.app.sidebarOpened
+  sidebarOpened: state => state.app.sidebarOpened,
+  /**
+   * 中英文状态
+   * @param {*} state
+   * @returns
+   */
+  language: state => state.app.language
 }
 
 export default getters

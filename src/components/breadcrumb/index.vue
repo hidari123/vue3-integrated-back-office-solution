@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 11:17:17
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 12:15:37
+ * @LastEditTime: 2022-05-24 15:54:31
  * @FilePath: \vue3-integrated-back-office-solution\src\components\breadcrumb\index.vue
  * @Description: 面包屑导航
  *
@@ -17,15 +17,16 @@
         <span
         class="no-redirect"
         v-if="index === breadcrumbData.length - 1"
-        >{{item.meta.title}}</span>
+        >{{ generateTitle(item.meta.title) }}</span>
         <!-- 可点击 -->
-        <span v-else class="redirect" @click="onLickClick(item)">{{item.meta.title}}</span>
+        <span v-else class="redirect" @click="onLickClick(item)">{{ generateTitle(item.meta.title) }}</span>
     </el-breadcrumb-item>
   </transition-group>
   </el-breadcrumb>
 </template>
 
 <script setup>
+import generateTitle from '@/utils/i18n'
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'

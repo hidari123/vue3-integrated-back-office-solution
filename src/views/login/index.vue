@@ -2,7 +2,8 @@
   <div class="login-container">
     <el-form class="login-form" ref="loginFormRef" :model="loginForm" :rules="loginRules">
       <div class="title-container">
-        <h3 class="title">用户登录</h3>
+        <h3 class="title">{{ $t('msg.login.title') }}</h3>
+        <LangSelect class="lang-select" effect="light" />
       </div>
 <!--      username-->
       <el-form-item prop="username">
@@ -26,29 +27,37 @@
 <!--      登录按钮-->
       <el-button type="primary" style="width: 100%; margin-bottom: 30px;"
                  :loading="loading"
-                 @click="handlerLogin">登录</el-button>
+                 @click="handlerLogin">{{ $t('msg.login.loginBtn') }}</el-button>
+        <div class="tips" v-html="$t('msg.login.desc')"></div>
     </el-form>
   </div>
 </template>
 
 <script setup>
 // 导入的组件可以直接使用
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { validatePassword } from '@/views/login/rules'
+import LangSelect from '@/components/langSelect/index.vue'
+import { useI18n } from 'vue-i18n'
 // 数据源
 const loginForm = ref({
   username: 'super-admin',
   password: '123456'
 })
 // 验证规则
+const i18n = useI18n()
+// setup 只在生成页面时执行一次 写到 computed 中可以动态改变
+const usernameRule = computed(() => {
+  return i18n.t('msg.login.usernameRule')
+})
 const loginRules = ref({
   username: [
     {
       required: true,
       trigger: 'blur',
-      message: '用户名为必填项'
+      message: usernameRule
     }
   ],
   password: [
@@ -117,14 +126,14 @@ $cursor: #fff;
     margin: 0 auto;
     overflow: hidden;
 
-    ::v-deep .el-form-item {
+    :deep(.el-form-item) {
       border: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(0, 0, 0, 0.1);
       border-radius: 5px;
       color: #454545;
     }
 
-    ::v-deep .el-input {
+    :deep(.el-input) {
       display: inline-block;
       height: 47px;
       width: 85%;
@@ -173,7 +182,7 @@ $cursor: #fff;
       font-weight: bold;
     }
 
-    ::v-deep .lang-select {
+    :deep(.lang-select) {
       position: absolute;
       top: 4px;
       right: 0;
