@@ -13,6 +13,15 @@
     - [国际化缓存处理](#%E5%9B%BD%E9%99%85%E5%8C%96%E7%BC%93%E5%AD%98%E5%A4%84%E7%90%86)
   - [动态换肤](#%E5%8A%A8%E6%80%81%E6%8D%A2%E8%82%A4)
     - [原理分析](#%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
+    - [创建 ThemeSelect 组件](#%E5%88%9B%E5%BB%BA-themeselect-%E7%BB%84%E4%BB%B6)
+    - [处理 element-plus 主题变更原理与步骤分析](#%E5%A4%84%E7%90%86-element-plus-%E4%B8%BB%E9%A2%98%E5%8F%98%E6%9B%B4%E5%8E%9F%E7%90%86%E4%B8%8E%E6%AD%A5%E9%AA%A4%E5%88%86%E6%9E%90)
+    - [处理 element-plus 主题变更](#%E5%A4%84%E7%90%86-element-plus-%E4%B8%BB%E9%A2%98%E5%8F%98%E6%9B%B4)
+    - [element-plus 新主题的立即生效](#element-plus-%E6%96%B0%E4%B8%BB%E9%A2%98%E7%9A%84%E7%AB%8B%E5%8D%B3%E7%94%9F%E6%95%88)
+    - [自定义主题变更](#%E8%87%AA%E5%AE%9A%E4%B9%89%E4%B8%BB%E9%A2%98%E5%8F%98%E6%9B%B4)
+  - [全屏](#%E5%85%A8%E5%B1%8F)
+    - [原理及方案分析](#%E5%8E%9F%E7%90%86%E5%8F%8A%E6%96%B9%E6%A1%88%E5%88%86%E6%9E%90)
+    - [screenfull](#screenfull)
+  - [页面搜索](#%E9%A1%B5%E9%9D%A2%E6%90%9C%E7%B4%A2)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1588,3 +1597,86 @@ export default getters
 
 ```
 
+## 全屏
+
+### 原理及方案分析
+
+**原理：**
+
+对于 `screenfull ` 而言，浏览器本身已经提供了对用的 `API`，[点击这里即可查看](https://developer.mozilla.org/zh-CN/docs/Web/API/Fullscreen_API)，这个 `API` 中，主要提供了两个方法：
+
+1. [`Document.exitFullscreen()`](https://developer.mozilla.org/zh-CN/docs/Web/API/Document/exitFullscreen)：该方法用于请求从全屏模式切换到窗口模式
+2. [`Element.requestFullscreen()`](https://developer.mozilla.org/zh-CN/docs/Web/API/Element/requestFullScreen)：该方法用于请求浏览器（user agent）将特定元素（甚至延伸到它的后代元素）置为全屏模式
+   1. 比如我们可以通过 `document.getElementById('app').requestFullscreen()` 在获取 `id=app` 的 `DOM` 之后，把该区域置为全屏
+
+但是该方法存在一定的小问题，比如：
+
+1. `appmain` 区域背景颜色为黑色
+
+所以通常情况下我们不会直接使用该 `API` 来去实现全屏效果，而是会使用它的包装库 [screenfull](https://www.npmjs.com/package/screenfull)
+
+**方案：**
+
+整体的方案实现分为两步：
+
+1. 封装 `screenfull` 组件
+   1. 展示切换按钮
+   2. 基于 [screenfull](https://www.npmjs.com/package/screenfull) 实现切换功能
+2. 在 `navbar` 中引入该组件
+
+### screenfull
+
+**封装 `screenfull` 组件：**
+
+1. 下来依赖包  [screenfull](https://www.npmjs.com/package/screenfull) 
+
+   ```
+   npm i screenfull@5.1.0
+   ```
+
+2. 创建 `components/Screenfull/index`
+
+```vue
+<template>
+  <div @click="onToggle">
+      <svg-icon :icon="isFullscreen ? 'exit-fullscreen' : 'fullscreen'"></svg-icon>
+  </div>
+</template>
+
+<script setup>
+import { onMounted, onUnmounted, ref } from 'vue'
+// 引入第三方包全屏
+import screenfull from 'screenfull/dist/screenfull'
+
+// 是否全屏
+const isFullscreen = ref(false)
+// 触发事件
+const onToggle = () => {
+  // 切换全屏
+  screenfull.toggle()
+}
+
+// 监听 screenfull 变化
+const change = () => {
+  isFullscreen.value = screenfull.isFullscreen
+}
+// on: 绑定监听
+onMounted(() => {
+  screenfull.on('change', change)
+})
+
+// off：取消绑定
+onUnmounted(() => {
+  screenfull.off('change', change)
+})
+</script>
+```
+
+**在 `navbar` 中引入该组件：**
+
+```
+<screenfull class="right-menu-item hover-effect" />
+import Screenfull from '@/components/Screenfull'
+```
+
+## 页面搜索

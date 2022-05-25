@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-25 11:45:15
+ * @LastEditTime: 2022-05-25 17:15:15
  * @FilePath: \vue3-integrated-back-office-solution\src\layout\components\Navbar.vue
  * @Description: 主页面头部区域
  *
@@ -15,6 +15,7 @@
     <!-- 面包屑导航 -->
     <breadcrumb class="breadcrumb-container" />
     <div class="right-menu">
+        <screenfull class="right-menu-item hover-effect" />
         <!-- 换肤 -->
         <theme-picker class="right-menu-item hover-effect" />
         <!-- 国际化 -->
@@ -48,6 +49,7 @@ import Breadcrumb from '@/components/breadcrumb'
 import LangSelect from '@/components/langSelect'
 import ThemePicker from '@/components/themePicker'
 import avatar from '@/images/avatar.jpg'
+import Screenfull from '@/components/screenfull/index.vue'
 const store = useStore()
 const logout = () => {
   store.dispatch('user/logout')
