@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-25 17:02:20
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-25 17:26:40
+ * @LastEditTime: 2022-05-25 17:51:00
  * @FilePath: \vue3-integrated-back-office-solution\src\components\screenfull\index.vue
  * @Description: 全屏按钮组件
  *
@@ -10,7 +10,11 @@
 -->
 <template>
   <div @click="onToggle">
-      <svg-icon :icon="isFullscreen ? 'exit-fullscreen' : 'fullscreen'"></svg-icon>
+    <el-tooltip :content="$t('msg.navBar.screenfull')">
+        <div>
+            <svg-icon :icon="isFullscreen ? 'exit-fullscreen' : 'fullscreen'"></svg-icon>
+        </div>
+    </el-tooltip>
   </div>
 </template>
 

@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-25 09:50:29
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-25 15:17:15
+ * @LastEditTime: 2022-05-25 17:50:05
  * @FilePath: \vue3-integrated-back-office-solution\src\components\themePicker\components\selectColor.vue
  * @Description: 颜色选择组件
  *
@@ -58,7 +58,6 @@ const store = useStore()
 const confirm = async () => {
   // 得到新样式
   const newStyle = await generateNewStyle(mColor.value)
-  console.log(newStyle)
   writeNewStyle(newStyle)
   store.commit('theme/setMainColor', mColor.value)
   closed()
