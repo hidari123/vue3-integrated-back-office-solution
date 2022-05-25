@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 15:47:08
+ * @LastEditTime: 2022-05-25 11:45:15
  * @FilePath: \vue3-integrated-back-office-solution\src\layout\components\Navbar.vue
  * @Description: 主页面头部区域
  *
@@ -15,12 +15,14 @@
     <!-- 面包屑导航 -->
     <breadcrumb class="breadcrumb-container" />
     <div class="right-menu">
+        <!-- 换肤 -->
+        <theme-picker class="right-menu-item hover-effect" />
         <!-- 国际化 -->
         <Lang-select class="right-menu-item hover-effect" />
       <!--      头像-->
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <el-avatar shape="square" :size="40" :src="$store.getters.userInfo.avatar"></el-avatar>
+          <el-avatar shape="square" :size="40" :src="avatar"></el-avatar>
           <i class="el-icon-s-tools"></i>
         </div>
         <template #dropdown>
@@ -42,8 +44,10 @@
 <script setup>
 import { useStore } from 'vuex'
 import Hamburger from '@/components/hamburger'
-import Breadcrumb from '@/components/breadcrumb/index.vue'
-import LangSelect from '@/components/langSelect/index.vue'
+import Breadcrumb from '@/components/breadcrumb'
+import LangSelect from '@/components/langSelect'
+import ThemePicker from '@/components/themePicker'
+import avatar from '@/images/avatar.jpg'
 const store = useStore()
 const logout = () => {
   store.dispatch('user/logout')

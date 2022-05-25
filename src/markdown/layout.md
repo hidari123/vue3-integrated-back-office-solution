@@ -564,6 +564,9 @@ export default {
 
 在 `layout/components/navbar.js` 中实现以下代码：
 
+- 问题： `el-avatar` 无法使用本地资源
+- 解决：先 `import` 再使用变量
+
 ```vue
 <template>
   <div class="navbar">
@@ -571,11 +574,7 @@ export default {
       <!-- 头像 -->
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <el-avatar
-            shape="square"
-            :size="40"
-            :src="$store.getters.userInfo.avatar"
-          ></el-avatar>
+          <el-avatar shape="square" :size="40" :src="avatar"></el-avatar>
           <i class="el-icon-s-tools"></i>
         </div>
         <template #dropdown>
@@ -598,6 +597,7 @@ export default {
 
 <script setup>
 import {} from 'vue'
+import avatar from '@/images/avatar.jpg'
 </script>
 
 <style lang="scss" scoped>
@@ -1953,7 +1953,7 @@ $hideSideBarWidth: 54px;
       <el-avatar
         :size="logoHeight"
         shape="square"
-        src="https://m.imooc.com/static/wap/static/common/img/logo-small@2x.png"
+        :src="logo"
       />
       <h1 class="logo-title" v-if="$store.getters.sidebarOpened">
         hidari-admin
@@ -1965,6 +1965,7 @@ $hideSideBarWidth: 54px;
 
 <script setup>
 import SidebarMenu from './SidebarMenu'
+import logo from '@/images/logo.jpg'
 import {} from 'vue'
 const logoHeight = 44
 </script>

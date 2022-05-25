@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 11:17:41
+ * @LastEditTime: 2022-05-25 15:59:45
  * @FilePath: \vue3-integrated-back-office-solution\src\layout\index.vue
  * @Description: 主页面容器
  *
@@ -13,7 +13,7 @@
   :class="[$store.getters.sidebarOpened ? 'openSidebar' : 'hideSidebar']"
   >
     <!--    左侧 menu-->
-    <sidebar class="sidebar-container" :style="{ backgroundColor: variables.menuBg }"/>
+    <sidebar class="sidebar-container" :style="{ backgroundColor: $store.getters.cssVar.menuBg }"/>
     <div class="main-container">
       <div class="fiex-header">
         <!--    顶部 navbar-->
@@ -26,7 +26,6 @@
 </template>
 
 <script setup>
-import variables from '@/styles/variables.scss'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import AppMain from './components/AppMain'

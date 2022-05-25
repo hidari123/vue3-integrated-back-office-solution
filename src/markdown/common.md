@@ -1,8 +1,26 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [通用方案](#%E9%80%9A%E7%94%A8%E6%96%B9%E6%A1%88)
+  - [国际化](#%E5%9B%BD%E9%99%85%E5%8C%96)
+    - [国际化实现原理](#%E5%9B%BD%E9%99%85%E5%8C%96%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+    - [基于 vue-i18n V9  的国际化实现方案分析](#%E5%9F%BA%E4%BA%8E-vue-i18n-v9--%E7%9A%84%E5%9B%BD%E9%99%85%E5%8C%96%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88%E5%88%86%E6%9E%90)
+    - [封装  langSelect  组件](#%E5%B0%81%E8%A3%85--langselect--%E7%BB%84%E4%BB%B6)
+    - [element-plus 国际化处理](#element-plus-%E5%9B%BD%E9%99%85%E5%8C%96%E5%A4%84%E7%90%86)
+    - [自定义语言包国际化处理](#%E8%87%AA%E5%AE%9A%E4%B9%89%E8%AF%AD%E8%A8%80%E5%8C%85%E5%9B%BD%E9%99%85%E5%8C%96%E5%A4%84%E7%90%86)
+    - [处理项目国际化内容](#%E5%A4%84%E7%90%86%E9%A1%B9%E7%9B%AE%E5%9B%BD%E9%99%85%E5%8C%96%E5%86%85%E5%AE%B9)
+    - [国际化缓存处理](#%E5%9B%BD%E9%99%85%E5%8C%96%E7%BC%93%E5%AD%98%E5%A4%84%E7%90%86)
+  - [动态换肤](#%E5%8A%A8%E6%80%81%E6%8D%A2%E8%82%A4)
+    - [原理分析](#%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <!--
  * @Author: hidari
  * @Date: 2022-05-24 12:45:45
  * @LastEditors: hidari 
- * @LastEditTime: 2022-05-24 16:47:29
+ * @LastEditTime: 2022-05-24 16:49:11
  * @FilePath: \vue3-integrated-back-office-solution\src\markdown\common.md
  * @Description: 通用功能开发
  * 
@@ -199,7 +217,9 @@
    export const LANG = 'language'
    ```
 
-3. 创建 `components/LangSelect/index` 
+3. 创建 `components/LangSelect/index`
+
+- `el-tooltip`组件中间的内容要外面包裹一层元素
 ```vue
 <template>
   <el-dropdown
@@ -207,11 +227,11 @@
     trigger="click"
      @command="handleSetLanguage"
    >
-    <div>
-        <el-tooltip content="国际化" :effect="effect">
+    <el-tooltip content="国际化" :effect="effect">
+        <div>
             <svg-icon icon="language"></svg-icon>
-        </el-tooltip>
-    </div>
+        </div>
+    </el-tooltip>
     <template #dropdown>
         <el-dropdown-item :disabled="language === 'zh'" command="zh">中文</el-dropdown-item>
         <el-dropdown-item :disabled="language === 'en'" command="en">English</el-dropdown-item>
@@ -953,3 +973,618 @@ const i18n = createI18n({
   locale: getLanguage()
 })
 ```
+
+
+## 动态换肤
+
+### 原理分析
+在 `scss` 中，可以通过 `$变量名:变量值` 的方式定义 `css 变量` ，然后通过该 `css` 来去指定某一块 `DOM` 对应的颜色, 此时改变了该 `css` 变量的值，那么对应的 `DOM` 颜色也会同步发生变化。
+
+当大量的 `DOM` 都依赖这个 `css 变量` 设置颜色时，只需要改变这个 `css 变量` ，那么所有 `DOM` 的颜色都会发生变化，这个就是 **动态换肤** 的实现原理。
+
+本项目中想要实现动态换肤，需要同时处理两个方面的内容：
+
+1. `element-plus` 主题
+2. 非 `element-plus` 主题
+
+- 对于 `element-plus`：因为 `element-plus` 是第三方的包，所以它 **不是完全可控** 的，那么对于这种最简单直白的方案，就是直接拿到它编译后的 `css` 进行色值替换，利用 `style` **内部样式表** 优先级高于 **外部样式表** 的特性，来进行主题替换
+- 对于自定义主题：因为自定义主题是 **完全可控** 的，所以只需要修改对应的 `scss`变量
+
+实现方案: 
+
+1. 创建一个组件 `ThemeSelect` 用来处理修改之后的 `css 变量` 的值
+2. 根据新值修改 `element-plus`  主题色
+3. 根据新值修改非 `element-plus`  主题色
+
+### 创建 ThemeSelect 组件
+
+`ThemeSelect` 组件将由两部分组成：
+
+1. `navbar` 中的展示图标
+2. 选择颜色的弹出层
+
+**`navbar` 中的展示图标**
+
+创建 `components/ThemePicker/index` 组件
+```vue
+<template>
+  <el-dropdown
+    v-bind="$attrs"
+    trigger="click"
+    class="theme"
+    @command="handleSetTheme"
+   >
+   <!-- 图标 -->
+   <el-tooltip :content="$t('msg.navBar.themeChange')">
+        <div>
+            <svg-icon id="guide-theme" icon="change-theme" />
+        </div>
+   </el-tooltip>
+   <template #dropdown>
+       <el-dropdown-menu>
+           <el-dropdown-item command="color">
+                {{ $t('msg.theme.themeColorChange') }}
+           </el-dropdown-item>
+       </el-dropdown-menu>
+   </template>
+  </el-dropdown>
+  <!-- 弹出层 -->
+  <div></div>
+</template>
+
+<script setup>
+const handleSetTheme = () => {}
+</script>
+
+<style lang="scss" scoped>
+
+</style>
+```
+在 `layout/components/navbar` 中进行引用
+
+```vue
+<div class="right-menu">
+      <theme-picker class="right-menu-item hover-effect"></theme-picker>
+      
+import ThemePicker from '@/components/ThemePicker/index'
+```
+
+**创建 SelectColor 组件**
+
+> 用到 `element` 中的 `el-color-picker` 组件
+
+1. 完成 `SelectColor` 弹窗展示的双向数据绑定
+2. 把选中的色值进行本地缓存
+
+**完成 `SelectColor` 弹窗展示的双向数据绑定**
+
+创建 `components/ThemePicker/components/SelectColor.vue` 
+
+```vue
+<template>
+  <el-dialog title="提示" :model-value="modelValue" @close="closed" width="22%">
+    <div class="center">
+      <p class="title">{{ $t('msg.theme.themeColorChange') }}</p>
+      <el-color-picker
+        v-model="mColor"
+        :predefine="predefineColors"
+      ></el-color-picker>
+    </div>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="closed">{{ $t('msg.universal.cancel') }}</el-button>
+        <el-button type="primary" @click="comfirm">{{
+          $t('msg.universal.confirm')
+        }}</el-button>
+      </span>
+    </template>
+  </el-dialog>
+</template>
+
+<script setup>
+import { defineProps, defineEmits, ref } from 'vue'
+defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true
+  }
+})
+const emits = defineEmits(['update:modelValue'])
+
+// 预定义色值
+const predefineColors = [
+  '#ff4500',
+  '#ff8c00',
+  '#ffd700',
+  '#90ee90',
+  '#00ced1',
+  '#1e90ff',
+  '#c71585',
+  'rgba(255, 69, 0, 0.68)',
+  'rgb(255, 120, 0)',
+  'hsv(51, 100, 98)',
+  'hsva(120, 40, 94, 0.5)',
+  'hsl(181, 100%, 37%)',
+  'hsla(209, 100%, 56%, 0.73)',
+  '#c7158577'
+]
+// 默认色值
+const mColor = ref('#00ff00')
+
+/**
+ * 关闭
+ */
+const closed = () => {
+  emits('update:modelValue', false)
+}
+/**
+ * 确定
+ * 1. 修改主题色
+ * 2. 保存最新的主题色
+ * 3. 关闭 dialog
+ */
+const comfirm = async () => {
+  // 3. 关闭 dialog
+  closed()
+}
+</script>
+
+<style lang="scss" scoped>
+.center {
+  text-align: center;
+  .title {
+    margin-bottom: 12px;
+  }
+}
+</style>
+
+```
+
+
+
+在 `ThemePicker/index` 中使用该组件
+
+```vue
+<template>
+  ...
+  <!-- 展示弹出层 -->
+  <div>
+    <select-color v-model="selectColorVisible"></select-color>
+  </div>
+</template>
+
+<script setup>
+import SelectColor from './components/SelectColor.vue'
+import { ref } from 'vue'
+
+const selectColorVisible = ref(false)
+const handleSetTheme = command => {
+  selectColorVisible.value = true
+}
+</script>
+
+```
+
+**把选中的色值进行本地缓存**
+
+缓存的方式分为两种：
+
+1. `vuex`
+2. 本地存储
+
+在 `constants/index` 下新建常量值
+
+```js
+// 主题色保存的 key
+export const MAIN_COLOR = 'mainColor'
+// 默认色值
+export const DEFAULT_COLOR = '#409eff'
+```
+
+创建 `store/modules/theme` 模块，用来处理 **主题色** 相关内容
+
+```js
+import { getItem, setItem } from '@/utils/storage'
+import { MAIN_COLOR, DEFAULT_COLOR } from '@/constant'
+export default {
+  namespaced: true,
+  state: () => ({
+    mainColor: getItem(MAIN_COLOR) || DEFAULT_COLOR
+  }),
+  mutations: {
+    /**
+     * 设置主题色
+     */
+    setMainColor(state, newColor) {
+      state.mainColor = newColor
+      setItem(MAIN_COLOR, newColor)
+    }
+  }
+}
+```
+
+在 `store/getters` 下指定快捷访问
+
+```js
+mainColor: state => state.theme.mainColor
+```
+
+在 `store/index` 中导入 `theme`
+
+```js
+...
+import theme from './modules/theme.js'
+
+export default createStore({
+  getters,
+  modules: {
+    ...
+    theme
+  }
+})
+```
+
+在 `selectColor` 中，设置初始色值 和  缓存色值
+
+```vue
+...
+
+<script setup>
+import { defineProps, defineEmits, ref } from 'vue'
+import { useStore } from 'vuex'
+...
+const store = useStore()
+// 默认色值
+const mColor = ref(store.getters.mainColor)
+...
+/**
+ * 确定
+ * 1. 修改主题色
+ * 2. 保存最新的主题色
+ * 3. 关闭 dialog
+ */
+const comfirm = async () => {
+  // 2. 保存最新的主题色
+  store.commit('theme/setMainColor', mColor.value)
+  // 3. 关闭 dialog
+  closed()
+}
+</script>
+
+
+```
+
+### 处理 element-plus 主题变更原理与步骤分析
+
+**实现原理：**
+
+1. 获取当前 `element-plus` 的所有样式
+2. 找到我们想要替换的样式部分，通过正则完成替换
+3. 把替换后的样式写入到 `style` 标签中，利用样式优先级的特性，替代固有样式
+
+**实现步骤：**
+
+
+1. 获取当前 `element-plus` 的所有样式
+2. 定义我们要替换之后的样式
+3. 在原样式中，利用正则替换新样式
+4. 把替换后的样式写入到 `style` 标签中
+
+
+### 处理 element-plus 主题变更
+
+创建 `utils/theme` 工具类，写入两个方法
+
+```js
+/**
+ * 写入新样式到 style
+ * @param {*} newStyle  element-plus 的新样式
+ */
+export const writeNewStyle = elNewStyle => {
+  
+}
+
+/**
+ * 根据主色值，生成最新的样式表
+ */
+export const generateNewStyle =  primaryColor => {
+ 
+}
+```
+
+第一个方法 `generateNewStyle`，需要安装两个工具类：
+
+1. [rgb-hex](https://www.npmjs.com/package/rgb-hex)：转换RGB(A)颜色为十六进制
+2. [css-color-function](https://www.npmjs.com/package/css-color-function)：在CSS中提出的颜色函数的解析器和转换器
+
+还需要写入一个 **颜色转化计算器  `formula.json`**
+
+创建 `constants/formula.json` （https://gist.github.com/benfrain/7545629）
+
+```json
+{
+  "shade-1": "color(primary shade(10%))",
+  "light-1": "color(primary tint(10%))",
+  "light-2": "color(primary tint(20%))",
+  "light-3": "color(primary tint(30%))",
+  "light-4": "color(primary tint(40%))",
+  "light-5": "color(primary tint(50%))",
+  "light-6": "color(primary tint(60%))",
+  "light-7": "color(primary tint(70%))",
+  "light-8": "color(primary tint(80%))",
+  "light-9": "color(primary tint(90%))",
+  "subMenuHover": "color(primary tint(70%))",
+  "subMenuBg": "color(primary tint(80%))",
+  "menuHover": "color(primary tint(90%))",
+  "menuBg": "color(primary)"
+}
+```
+
+实现方法：
+```js
+// 导入色值表
+import formula from '@/constant/formula.json'
+// 导入转换RGB(A)颜色为十六进制的包
+import rgbHex from 'rgb-hex'
+// 导入在CSS中提出的颜色函数的解析器和转换器包
+import color from 'css-color-function'
+import axios from 'axios'
+
+/**
+ * 把生成的样式表写入 style 中
+ * @param {*} newStyle 生成的样式表
+ */
+export const writeNewStyle = newStyle => {
+  const style = document.createElement('style')
+  style.innerText = newStyle
+  document.head.appendChild(style)
+}
+
+/**
+ * 根据主题色，生成最新样式表
+ * @param {String} primaryColor 主题色
+ */
+export const generateNewStyle = async primaryColor => {
+  // 1. 根据主色生成色值表
+  const colors = generateColors(primaryColor)
+  // 2. 获取当前 element-plus 默认样式表 并且把需要进行替换的色值打上标记
+  // 异步方法
+  let cssText = await getOriginalStyle()
+  // 3. 遍历生成的色值表 在默认样式表进行全局替换
+  Object.keys(colors).forEach(key => {
+    cssText = cssText.replace(
+      // 无论前面包含了多少个空格都替换key
+      new RegExp('(:|\\s+)' + key, 'g'),
+      '$1' + colors[key]
+    )
+  })
+  return cssText
+}
+
+/**
+ * 根据主色生成色值表
+ * @param {*} primaryColor 主题色
+ */
+export const generateColors = primaryColor => {
+  if (!primaryColor) return
+  const colors = {
+    primary: primaryColor
+  }
+  // 取出所有 key 值 遍历改变颜色
+  Object.keys(formula).forEach(key => {
+    const value = formula[key].replace(/primary/g, primaryColor)
+    colors[key] = '#' + rgbHex(color.convert(value))
+  })
+  return colors
+}
+
+/**
+ * 获取当前 element-plus 默认样式表
+ */
+const getOriginalStyle = async () => {
+  // 得到 element-plus 版本
+  const version = require('element-plus/package.json').version
+  // 得到css的url
+  const url = `https://unpkg.com/element-plus@${version}/dist/index.css`
+  const { data } = await axios(url)
+  // 把获取到的数据筛选为原样式模板
+  return getStyleTemplate(data)
+}
+
+/**
+ * 把需要进行替换的色值打上标记
+ * @param {*} data axios请求下来的需要进行替换的色值
+ */
+const getStyleTemplate = data => {
+  // element-plus 默认色值
+  const colorMap = {
+    '#3a8ee6': 'shade-1',
+    '#409eff': 'primary',
+    '#53a8ff': 'light-1',
+    '#66b1ff': 'light-2',
+    '#79bbff': 'light-3',
+    '#8cc5ff': 'light-4',
+    '#a0cfff': 'light-5',
+    '#b3d8ff': 'light-6',
+    '#c6e2ff': 'light-7',
+    '#d9ecff': 'light-8',
+    '#ecf5ff': 'light-9'
+  }
+  // 遍历 colorMap 的 key 得到每一个 key 对应的 value 值
+  Object.keys(colorMap).forEach(key => {
+    const value = colorMap[key]
+    // 得到打上标记后的 data
+    data = data.replace(new RegExp(key, 'ig'), value)
+  })
+  return data
+}
+```
+
+在 `SelectColor.vue` 中导入这两个方法：
+
+```vue
+...
+
+<script setup>
+...
+import { generateNewStyle, writeNewStyle } from '@/utils/theme'
+...
+/**
+ * 确定
+ * 1. 修改主题色
+ * 2. 保存最新的主题色
+ * 3. 关闭 dialog
+ */
+
+const comfirm = async () => {
+  // 1.1 获取主题色
+  const newStyleText = await generateNewStyle(mColor.value)
+  // 1.2 写入最新主题色
+  writeNewStyle(newStyleText)
+  // 2. 保存最新的主题色
+  store.commit('theme/setMainColor', mColor.value)
+  // 3. 关闭 dialog
+  closed()
+}
+</script>
+
+```
+
+### element-plus 新主题的立即生效
+
+问题：**在刷新页面后，新主题会失效**
+
+原因：**因为没有写入新的 `style`**
+
+解决方案： **应用加载后，写入 `style` 即可**
+
+写入的时机可以放入到 `app.vue` 中
+
+```vue
+<script setup>
+import { useStore } from 'vuex'
+import { generateNewStyle, writeNewStyle } from '@/utils/theme'
+const store = useStore()
+/**
+ * 从store中取出设定的主题色，在主页面进入时发送请求更改
+ */
+generateNewStyle(store.getters.mainColor).then(newStyle => {
+  writeNewStyle(newStyle)
+})
+</script>
+```
+
+### 自定义主题变更
+
+**`menu` 菜单背景色**
+
+`menu` 菜单背景色的位置在 `layout/components/sidebar/SidebarMenu.vue` 中
+
+```js
+  <el-menu
+    :default-active="activeMenu"
+    :collapse="!$store.getters.sidebarOpened"
+    :background-color="$store.getters.cssVar.menuBg"
+    :text-color="$store.getters.cssVar.menuText"
+    :active-text-color="$store.getters.cssVar.menuActiveText"
+    :unique-opened="true"
+    router
+  >
+```
+
+此处的 背景色是通过 `getters` 进行指定的，该 `cssVar` 的 `getters` 为：
+
+```js
+cssVar: state => variables,
+```
+
+**根据当前保存的 `mainColor` 覆盖原有的默认色值**
+
+```js
+import variables from '@/styles/variables.scss'
+import { MAIN_COLOR } from '@/constant'
+import { getItem } from '@/utils/storage'
+import { generateColors } from '@/utils/theme'
+
+const getters = {
+  ...
+  /**
+   * variables 主题样式变量
+   * @param state
+   * @returns {*}
+   */
+  cssVar: state => ({
+    ...variables,
+    // 主题色
+    // 对象中后面的对象key相同时会替换掉前面相同key的key值
+    ...generateColors(getItem(MAIN_COLOR))
+  }),
+  ...
+}
+export default getters
+
+```
+
+在 `layout/index` 中设置 `sidebar` 的 `backgroundColor`
+
+```html
+<sidebar
+      id="guide-sidebar"
+      class="sidebar-container"
+      :style="{ backgroundColor: $store.getters.cssVar.menuBg }"
+    />
+```
+
+问题：主题色替换之后，需要刷新页面才可响应
+
+这个是因为 `getters` 中没有监听到 **依赖值的响应变化**，所以我们希望修改依赖值
+
+在 `store/modules/theme` 中
+
+```js
+...
+import variables from '@/styles/variables.scss'
+export default {
+  namespaced: true,
+  state: () => ({
+    ...
+    variables
+  }),
+  mutations: {
+    /**
+     * 设置主题色
+     */
+    setMainColor(state, newColor) {
+      ...
+      state.variables.menuBg = newColor
+      ...
+    }
+  }
+}
+
+```
+
+在 `getters` 中
+
+```js
+....
+
+const getters = {
+ ...
+  /**
+   * variables 主题样式变量
+   * @param state
+   * @returns {*}
+   */
+  cssVar: state => ({
+    ...state.theme.variables,
+    // 主题色
+    // 对象中后面的对象key相同时会替换掉前面相同key的key值
+    ...generateColors(getItem(MAIN_COLOR))
+  }),
+  ...
+}
+export default getters
+
+```
+

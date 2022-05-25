@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 13:26:06
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 15:48:08
+ * @LastEditTime: 2022-05-24 18:15:32
  * @FilePath: \vue3-integrated-back-office-solution\src\components\langSelect\index.vue
  * @Description: 切换中英文组件
  *
@@ -14,11 +14,11 @@
     trigger="click"
      @command="handleSetLanguage"
    >
-    <div>
-        <el-tooltip :content="$t('msg.navBar.lang')" :effect="effect">
+    <el-tooltip :content="$t('msg.navBar.lang')" :effect="effect">
+        <div>
             <svg-icon icon="language"></svg-icon>
-        </el-tooltip>
-    </div>
+        </div>
+    </el-tooltip>
     <template #dropdown>
         <el-dropdown-item :disabled="language === 'zh'" command="zh">中文</el-dropdown-item>
         <el-dropdown-item :disabled="language === 'en'" command="en">English</el-dropdown-item>

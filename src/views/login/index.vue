@@ -24,7 +24,7 @@
         </span>
         </span>
       </el-form-item>
-<!--      登录按钮-->
+        <!--      登录按钮-->
       <el-button type="primary" style="width: 100%; margin-bottom: 30px;"
                  :loading="loading"
                  @click="handlerLogin">{{ $t('msg.login.loginBtn') }}</el-button>
@@ -148,6 +148,15 @@ $cursor: #fff;
         height: 47px;
         caret-color: $cursor;
       }
+    }
+
+    :deep(.el-input__wrapper) {
+        padding: 0;
+        /**我们想给一个类加上背景颜色为“none”时,会发现并没有这个属性,这时我们就该用到:background-color: transparent; */
+        background-color:transparent;
+        border: none;
+        display:flex;
+        box-shadow: none;
     }
   }
 

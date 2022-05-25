@@ -2,13 +2,15 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 13:48:13
+ * @LastEditTime: 2022-05-25 16:31:25
  * @FilePath: \vue3-integrated-back-office-solution\src\store\getters.js
  * @Description: 快捷访问
  *
  * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
  */
-import variables from '@/styles/variables.scss'
+import { MAIN_COLOR } from '@/constant'
+import { getItem } from '@/utils/storage'
+import { generateColors } from '@/utils/theme'
 
 const getters = {
   /**
@@ -40,7 +42,12 @@ const getters = {
    * @param state
    * @returns {*}
    */
-  cssVar: state => variables,
+  cssVar: state => ({
+    ...state.theme.variables,
+    // 主题色
+    // 对象中后面的对象key相同时会替换掉前面相同key的key值
+    ...generateColors(getItem(MAIN_COLOR))
+  }),
   /**
    * 左侧菜单伸缩状态
    * @param {*} state
@@ -52,7 +59,13 @@ const getters = {
    * @param {*} state
    * @returns
    */
-  language: state => state.app.language
+  language: state => state.app.language,
+  /**
+   * 主题色更换
+   * @param {*} state
+   * @returns
+   */
+  mainColor: state => state.theme.mainColor
 }
 
 export default getters

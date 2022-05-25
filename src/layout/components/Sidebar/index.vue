@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 11:29:54
+ * @LastEditTime: 2022-05-25 11:49:49
  * @FilePath: \vue3-integrated-back-office-solution\src\layout\components\Sidebar\index.vue
  * @Description: 左侧菜单头部logo区域
  *
@@ -13,8 +13,7 @@
     <div class="logo-container">
       <el-avatar
         :size="logoHeight"
-        shape="square"
-        src="https://m.imooc.com/static/wap/static/common/img/logo-small@2x.png"
+        :src="logo"
       />
       <h1 class="logo-title" v-if="$store.getters.sidebarOpened">
         hidari-admin
@@ -28,6 +27,7 @@
 
 <script setup>
 import SidebarMenu from './SidebarMenu'
+import logo from '@/images/logo.jpg'
 import {} from 'vue'
 const logoHeight = 44
 </script>

@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 16:30:02
+ * @LastEditTime: 2022-05-25 10:44:40
  * @FilePath: \vue3-integrated-back-office-solution\src\constant\index.js
  * @Description: 定义常量 便于维护
  *
@@ -20,3 +20,9 @@ export const TOKEN_TIMEOUT_VALUE = 2 * 3600 * 1000
 
 // 国际化
 export const LANG = 'language'
+
+// 主题色保存的 key
+export const MAIN_COLOR = 'mainColor'
+
+// 默认主题色
+export const DEFAULT_COLOR = '#409eff'
