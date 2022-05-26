@@ -2,17 +2,17 @@
  * @Author: hidari
  * @Date: 2022-05-25 17:42:41
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-26 12:32:03
+ * @LastEditTime: 2022-05-26 19:55:16
  * @FilePath: \vue3-integrated-back-office-solution\src\components\headSearch\index.vue
  * @Description: 页面搜索组件
  *
  * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
 -->
 <template>
-  <div class="header-search" :class="{show:isShow}">
+  <div id="guide-search" class="header-search" :class="{show:isShow}">
       <el-tooltip :content="$t('msg.navBar.headerSearch')">
         <div @click.stop="onShowClick" >
-            <svg-icon id="guide-search" class-name="search-icon" icon="search" />
+            <svg-icon class-name="search-icon" icon="search" />
         </div>
       </el-tooltip>
       <el-select
@@ -114,7 +114,7 @@ watch(isShow, val => {
 const onClose = () => {
   // 搜索框失去焦点
   headerSearchSelectRef.value.blur()
-  isShow.value = !isShow.value
+  isShow.value = false
 }
 
 // 搜索相关

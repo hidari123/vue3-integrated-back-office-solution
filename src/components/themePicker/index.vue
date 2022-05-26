@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-25 08:58:15
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-25 10:25:45
+ * @LastEditTime: 2022-05-26 19:54:09
  * @FilePath: \vue3-integrated-back-office-solution\src\components\themePicker\index.vue
  * @Description: 换肤组件
  *
@@ -10,6 +10,7 @@
 -->
 <template>
   <el-dropdown
+   id="guide-theme"
     v-bind="$attrs"
     trigger="click"
     class="theme"
@@ -18,7 +19,7 @@
    <!-- 图标 -->
    <el-tooltip :content="$t('msg.navBar.themeChange')">
         <div>
-            <svg-icon id="guide-theme" icon="change-theme" />
+            <svg-icon icon="change-theme" />
         </div>
    </el-tooltip>
    <template #dropdown>

@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-26 13:40:48
+ * @LastEditTime: 2022-05-26 19:43:03
  * @FilePath: \vue3-integrated-back-office-solution\src\layout\index.vue
  * @Description: 主页面容器
  *
@@ -13,12 +13,12 @@
   :class="[$store.getters.sidebarOpened ? 'openSidebar' : 'hideSidebar']"
   >
     <!--    左侧 menu-->
-    <sidebar class="sidebar-container" :style="{ backgroundColor: $store.getters.cssVar.menuBg }"/>
+    <sidebar id="guide-sidebar" class="sidebar-container" :style="{ backgroundColor: $store.getters.cssVar.menuBg }"/>
     <div class="main-container">
       <div class="fiex-header">
         <!--    顶部 navbar-->
         <navbar />
-        <tags-view />
+        <tags-view id="guide-tags" />
       </div>
       <!--    内容区-->
       <app-main />

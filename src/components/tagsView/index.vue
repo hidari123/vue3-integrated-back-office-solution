@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-26 13:16:51
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-26 18:43:48
+ * @LastEditTime: 2022-05-26 19:09:33
  * @FilePath: \vue3-integrated-back-office-solution\src\components\tagsView\index.vue
  * @Description: tags选项组件
  *
@@ -36,7 +36,7 @@
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
-import ContextMenu from './contextMenu.vue'
+import ContextMenu from './components/contextMenu.vue'
 
 const route = useRoute()
 /**

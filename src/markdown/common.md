@@ -27,6 +27,17 @@
     - [数据源重处理，生成  searchPool](#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%87%8D%E5%A4%84%E7%90%86%E7%94%9F%E6%88%90--searchpool)
     - [渲染检索数据](#%E6%B8%B2%E6%9F%93%E6%A3%80%E7%B4%A2%E6%95%B0%E6%8D%AE)
     - [剩余问题处理](#%E5%89%A9%E4%BD%99%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86)
+  - [tagsView](#tagsview)
+    - [原理及方案分析](#%E5%8E%9F%E7%90%86%E5%8F%8A%E6%96%B9%E6%A1%88%E5%88%86%E6%9E%90-1)
+    - [创建 tags 数据源](#%E5%88%9B%E5%BB%BA-tags-%E6%95%B0%E6%8D%AE%E6%BA%90)
+    - [生成 tagsView](#%E7%94%9F%E6%88%90-tagsview)
+    - [contextMenu 展示处理](#contextmenu-%E5%B1%95%E7%A4%BA%E5%A4%84%E7%90%86)
+    - [处理 contextMenu 的关闭行为](#%E5%A4%84%E7%90%86-contextmenu-%E7%9A%84%E5%85%B3%E9%97%AD%E8%A1%8C%E4%B8%BA)
+    - [处理基于路由的动态过渡](#%E5%A4%84%E7%90%86%E5%9F%BA%E4%BA%8E%E8%B7%AF%E7%94%B1%E7%9A%84%E5%8A%A8%E6%80%81%E8%BF%87%E6%B8%A1)
+  - [guide 引导页](#guide-%E5%BC%95%E5%AF%BC%E9%A1%B5)
+    - [原理及方案分析](#%E5%8E%9F%E7%90%86%E5%8F%8A%E6%96%B9%E6%A1%88%E5%88%86%E6%9E%90-2)
+    - [生成 Guide](#%E7%94%9F%E6%88%90-guide)
+    - [Guide 业务逻辑处理](#guide-%E4%B8%9A%E5%8A%A1%E9%80%BB%E8%BE%91%E5%A4%84%E7%90%86)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -2498,28 +2509,31 @@ export const isTags = (path) => {
 
 2. 创建 `components/tagsview`
 
+- 注：`element-icons` 当前版本需要单独导入
+
 ```vue
 <template>
-    <div class="tags-view-container">
+  <div class="tags-view-container">
+      <el-scrollbar class="tags-view-wrapper">
         <router-link
-        class="tags-view-item"
-        :class="isActive(tag) ? 'active' : ''"
-        :style="{
+            v-for="(tag,index) in $store.getters.tagsViewList"
+            :key="tag.fullPath"
+            class="tags-view-item"
+            :class="isActive(tag) ? 'active': ''"
+            :to="{path:tag.fullPath}"
+            :style="{
             backgroundColor: isActive(tag) ? $store.getters.cssVar.menuBg : '',
             borderColor: isActive(tag) ? $store.getters.cssVar.menuBg : ''
-        }"
-        v-for="(tag, index) in $store.getters.tagsViewList"
-        :key="tag.fullPath"
-        :to="{ path: tag.fullPath }"
+            }"
+            @contextmenu.prevent="openMenu($event,index)"
         >
-        {{ tag.title }}
-        <i
-            v-show="!isActive(tag)"
-            class="el-icon-close"
-            @click.prevent.stop="onCloseClick(index)"
-        />
+        {{tag.title}}
+        <!-- @click.prevent函数会阻止触发dom的原始事件，而去执行特定的事件 -->
+        <el-icon class="el-icon-close" v-show="!isActive(tag)" @click.prevent.stop="onCloseClick(index)"><Close /></el-icon>
         </router-link>
-    </div>
+      </el-scrollbar>
+      <context-menu v-show="visible" :style="menuStyle" :index="selectIndex" />
+  </div>
 </template>
 
 <script setup>
@@ -2607,16 +2621,16 @@ const onCloseClick = index => {}
    
 3. 在 `layout/index` 中导入
 
-```vue
+```html
 <div class="fixed-header">
     <!-- 顶部的 navbar -->
     <navbar />
     <!-- tags -->
     <tags-view></tags-view>
 </div>
-
+```
+```js
 import TagsView from '@/components/TagsView'
-
 ```
 
 tagsView 国际化处理
@@ -2953,3 +2967,268 @@ const closeMenu = () => {
      transform: translateX(30px);
    }
    ```
+
+ 
+## guide 引导页
+
+### 原理及方案分析
+
+通常情况下引导页是通过 **聚焦** 的方式，高亮一块视图，然后通过文字解释的形式来告知用户该功能的作用。
+
+所以说对于引导页而言，它的实现其实就是：**页面样式** 的实现。
+
+需求：
+
+1. 高亮某一块指定的样式
+2. 在高亮的样式处通过文本展示内容
+3. 用户可以进行下一次高亮或者关闭事件
+
+
+**方案：**
+
+> 这里使用 [driver.js](https://kamranahmed.info/driver.js/) 进行引导页处理。
+
+实现方案如下：
+
+1. 创建 `Guide` 组件：用于处理 `icon` 展示
+2. 初始化 [driver.js](https://kamranahmed.info/driver.js/) 
+3. 指定 [driver.js](https://kamranahmed.info/driver.js/) 的 `steps` 
+
+### 生成 Guide
+
+1.  创建`components/Guide`
+
+   ```vue
+   <template>
+     <div>
+       <el-tooltip :content="$t('msg.navBar.guide')">
+         <svg-icon icon="guide" />
+       </el-tooltip>
+     </div>
+   </template>
+   
+   <script setup></script>
+   
+   <style scoped></style>
+   
+   ```
+
+2. 在 `navbar` 中导入该组件
+
+   ```vue
+   <guide class="right-menu-item hover-effect" />
+   
+   import Guide from '@/components/Guide'
+   ```
+
+### Guide 业务逻辑处理
+
+1. 导入 [driver.js](https://kamranahmed.info/driver.js/) 
+
+   ```
+   npm i driver.js@0.9.8
+   ```
+
+2. 在 `guide.vue` 中初始化 `driiver`
+
+```js
+import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+// 导入 driver
+import Driver from 'driver.js'
+import 'driver.js/dist/driver.min.css'
+
+const i18n = useI18n()
+let driver = null
+onMounted(() => {
+  driver = new Driver({
+    // 禁止点击蒙版关闭
+    allowClose: false,
+    closeBtnText: i18n.t('msg.guide.close'),
+    nextBtnText: i18n.t('msg.guide.next'),
+    prevBtnText: i18n.t('msg.guide.prev')
+  })
+})
+```
+
+3. 创建 **步骤** `steps.js`
+```js
+/**
+ * 引导页步骤
+ * @param {*} i18n 国际化
+ */
+// 此处不要导入 @/i18n 使用 i18n.global ，因为我们在 router 中 layout 不是按需加载，所以会在 Guide 会在 I18n 初始化完成之前被直接调用。导致 i18n 为 undefined
+// 本项目改为按需加载
+const steps = i18n => {
+  return [
+    {
+      element: '#guide-start',
+      popover: {
+        title: i18n.t('msg.guide.guideTitle'),
+        description: i18n.t('msg.guide.guideDesc'),
+        position: 'bottom-right'
+      }
+    },
+    {
+      element: '#guide-hamburger',
+      popover: {
+        title: i18n.t('msg.guide.hamburgerTitle'),
+        description: i18n.t('msg.guide.hamburgerDesc')
+      }
+    },
+    {
+      element: '#guide-breadcrumb',
+      popover: {
+        title: i18n.t('msg.guide.breadcrumbTitle'),
+        description: i18n.t('msg.guide.breadcrumbDesc')
+      }
+    },
+    {
+      element: '#guide-search',
+      popover: {
+        title: i18n.t('msg.guide.searchTitle'),
+        description: i18n.t('msg.guide.searchDesc'),
+        position: 'bottom-right'
+      }
+    },
+    {
+      element: '#guide-full',
+      popover: {
+        title: i18n.t('msg.guide.fullTitle'),
+        description: i18n.t('msg.guide.fullDesc'),
+        position: 'bottom-right'
+      }
+    },
+    {
+      element: '#guide-theme',
+      popover: {
+        title: i18n.t('msg.guide.themeTitle'),
+        description: i18n.t('msg.guide.themeDesc'),
+        position: 'bottom-right'
+      }
+    },
+    {
+      element: '#guide-lang',
+      popover: {
+        title: i18n.t('msg.guide.langTitle'),
+        description: i18n.t('msg.guide.langDesc'),
+        position: 'bottom-right'
+      }
+    },
+    {
+      element: '#guide-tags',
+      popover: {
+        title: i18n.t('msg.guide.tagTitle'),
+        description: i18n.t('msg.guide.tagDesc')
+      }
+    },
+    {
+      element: '#guide-sidebar',
+      popover: {
+        title: i18n.t('msg.guide.sidebarTitle'),
+        description: i18n.t('msg.guide.sidebarDesc'),
+        position: 'right-center'
+      }
+    }
+  ]
+}
+export default steps
+```
+
+4. 在 `guide` 中导入“步骤”
+```vue
+<template>
+    ...
+     <svg-icon icon="guide" @click="onClick" />
+    ...
+</template>
+
+<script setup>
+...
+import steps from './steps'
+...
+const onClick = () => {
+    driver.defineSteps(steps(i18n))
+    driver.start()
+}
+</script>
+
+<style scoped></style>
+
+```
+
+5. 为 **引导高亮区域增加 ID**
+
+- 注意：添加到外容器上
+
+- 在 `components/guide/index` 中增加
+
+```html
+    <div @click="onClick" id="guide-start">
+        ...
+```
+
+- 在 `components/hamburger/index` 增加
+
+```html
+  <div id="guide-hamburger" class="hamburger-container" @click="toggleClick">
+      ...
+```
+
+- 在 `src/layout/components/Navbar.vue` 增加
+
+```html
+    <!-- 面包屑导航 -->
+    <breadcrumb id="guide-breadcrumb" class="breadcrumb-container" />
+```
+
+- 在 `components/headerSearch/index` 增加
+
+```html
+  <div id="guide-search" class="header-search" :class="{show:isShow}">
+      ...
+```
+
+- 在 `components/screenfull/index` 增加
+
+```html
+  <div id="guide-full" @click="onToggle">
+      ...
+```
+
+- 在 `components/themePicker/index` 增加
+
+```html
+  <el-dropdown
+   id="guide-theme"
+    v-bind="$attrs"
+    trigger="click"
+    class="theme"
+    @command="handleSetTheme"
+   >
+   ...
+```
+
+- 在 `components/langSelect/index` 增加
+
+```html
+  <el-dropdown
+   id="guide-lang"
+   class="international"
+    trigger="click"
+     @command="handleSetLanguage"
+   >
+   ...
+```
+
+- 在 `layout/index` 增加
+
+```html
+    <sidebar id="guide-sidebar" class="sidebar-container" :style="{ backgroundColor: $store.getters.cssVar.menuBg }"/>
+```
+
+- 在 `layout/index` 增加
+
+```html
+        <tags-view id="guide-tags" />
+```

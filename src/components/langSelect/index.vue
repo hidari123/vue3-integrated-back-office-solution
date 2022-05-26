@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 13:26:06
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 18:15:32
+ * @LastEditTime: 2022-05-26 19:53:30
  * @FilePath: \vue3-integrated-back-office-solution\src\components\langSelect\index.vue
  * @Description: 切换中英文组件
  *
@@ -10,6 +10,7 @@
 -->
 <template>
   <el-dropdown
+   id="guide-lang"
    class="international"
     trigger="click"
      @command="handleSetLanguage"

@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:57:37
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 11:17:17
+ * @LastEditTime: 2022-05-26 19:53:10
  * @FilePath: \vue3-integrated-back-office-solution\src\components\hamburger\index.vue
  * @Description: 左侧菜单伸缩按钮
  *
@@ -10,7 +10,7 @@
 -->
 
 <template>
-  <div class="hamburger-container" @click="toggleClick">
+  <div id="guide-hamburger" class="hamburger-container" @click="toggleClick">
       <svg-icon class="hamburger" :icon="icon"></svg-icon>
   </div>
 </template>
