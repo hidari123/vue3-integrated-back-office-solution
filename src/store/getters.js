@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-25 16:31:25
+ * @LastEditTime: 2022-05-26 13:16:03
  * @FilePath: \vue3-integrated-back-office-solution\src\store\getters.js
  * @Description: 快捷访问
  *
@@ -65,7 +65,14 @@ const getters = {
    * @param {*} state
    * @returns
    */
-  mainColor: state => state.theme.mainColor
+  mainColor: state => state.theme.mainColor,
+
+  /**
+   * tags标签数组
+   * @param {*} state
+   * @returns
+   */
+  tagsViewList: state => state.app.tagsViewList
 }
 
 export default getters

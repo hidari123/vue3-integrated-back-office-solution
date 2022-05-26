@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 13:20:14
+ * @LastEditTime: 2022-05-26 13:55:40
  * @FilePath: \vue3-integrated-back-office-solution\src\main.js
  * @Description: 主入口文件
  *
@@ -21,8 +21,15 @@ import '@/styles/index.scss'
 import installIcons from '@/icons'
 // 导入路由鉴权
 import './promission.js'
+// 引入 element-icon
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 const app = createApp(App)
+
+// 导入所有图标并全局注册
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
 installElementPlus(app)
 installIcons(app)
 app

@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-25 15:59:45
+ * @LastEditTime: 2022-05-26 13:40:48
  * @FilePath: \vue3-integrated-back-office-solution\src\layout\index.vue
  * @Description: 主页面容器
  *
@@ -18,6 +18,7 @@
       <div class="fiex-header">
         <!--    顶部 navbar-->
         <navbar />
+        <tags-view />
       </div>
       <!--    内容区-->
       <app-main />
@@ -29,6 +30,7 @@
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import AppMain from './components/AppMain'
+import TagsView from '@/components/tagsView/index.vue'
 </script>
 
 <style lang="scss" scoped>

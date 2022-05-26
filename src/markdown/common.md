@@ -2342,3 +2342,614 @@ watchSwitchLang(() => {
 }
 </style>
 ```
+
+## tagsView
+
+### 原理及方案分析
+
+1. tags：**位于 `appmain` 之上的标签**
+
+> 在 `view` 之上渲染这个 `tag` 
+
+2. view：**用来渲染组件的位置**
+
+在渲染的基础上增加：
+
+1. 动画
+2. 缓存
+
+但是 [官网处理动画](https://next.router.vuejs.org/zh/guide/advanced/transitions.html#%E5%9F%BA%E4%BA%8E%E8%B7%AF%E7%94%B1%E7%9A%84%E5%8A%A8%E6%80%81%E8%BF%87%E6%B8%A1) 
+
+**实现方案：**
+
+1. 创建 `tagsView` 组件：用来处理 `tags` 的展示
+2. 处理基于路由的动态过渡，在 `AppMain` 中进行：用于处理 `view` 的部分
+
+**实现步骤**
+
+1. 监听路由变化，组成用于渲染 `tags` 的数据源
+2. 创建 `tags` 组件，根据数据源渲染 `tag`，渲染出来的 `tags` 需要同时具备
+   1. 国际化 `title`
+   2. 路由跳转
+3. 处理鼠标右键效果，根据右键处理对应数据源
+4. 处理基于路由的动态过渡
+
+### 创建 tags 数据源
+
+`tags` 的数据源分为两部分：
+
+1. 保存数据：`appmain` 组件中进行
+2. 展示数据：`tags` 组件中进行
+
+`tags` 的数据 => 保存到 `vuex` 中。
+
+1. 在 `constant` 中新建常量
+
+   ```js
+    // tags标签
+    export const TAGS_VIEW = 'tagsView'
+   ```
+
+2. 在 `store/app` 中创建 `tagsViewList`
+
+   ```js
+   import { LANG, TAGS_VIEW } from '@/constant'
+   import { getItem, setItem } from '@/utils/storage'
+   export default {
+     namespaced: true,
+     state: () => ({
+       ...
+       tagsViewList: getItem(TAGS_VIEW) || []
+     }),
+     mutations: {
+       ...
+        /**
+         * 添加 tags
+        * @param {*} state
+        * @param {Object} tag 需要添加的tag标签对象
+        */
+        addTagsViewList (state, tag) {
+            // 查找是否已经存在相同 tag
+            const isFind = state.tagsViewList.find(item => {
+                return item.path === tag.path
+            })
+            // 处理重复
+            if (!isFind) {
+                // 如果不存在 push
+                state.tagsViewList.push(tag)
+                setItem(TAGS_VIEW, state.tagsViewList)
+            }
+        },
+     },
+     actions: {}
+   }
+   
+   ```
+
+3. 在 `appmain` 中监听路由的变化
+
+```js
+import { generateTitle } from '@/utils/i18n'
+import { isTags } from '@/utils/tags'
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useStore } from 'vuex'
+
+/**
+ * 生成 title
+ */
+const getTitle = route => {
+  let title = ''
+
+  if (!route.meta) {
+    // 如果没有meta.title 把路径最后一部分当作title
+    const pathArr = route.path.split('/')
+    title = pathArr[pathArr.length - 1]
+  } else {
+    title = generateTitle(route.meta.title)
+  }
+  return title
+}
+
+/**
+ * 监听路由变化
+ */
+const route = useRoute()
+const store = useStore()
+watch(route, (to, from) => {
+  // 不是所有路由都需要保存
+  if (!isTags(to.path)) return
+  const { fullPath, meta, name, params, path, query } = to
+  store.commit('app/addTagsViewList', { fullPath, meta, name, params, path, query, title: getTitle(to) })
+}, {
+  immediate: true
+})
+```
+
+4. 创建 `utils/tags`
+```js
+// 创建白名单 不希望被保存
+const whiteList = ['/login', '/404', '401']
+/**
+ * 是否需要被缓存
+ * @param {*} path 路径
+ * @returns
+ */
+export const isTags = (path) => {
+  // 如果在白名单中 不需要保存
+  return !whiteList.includes(path)
+}
+
+```
+
+### 生成 tagsView
+
+依赖数据渲染 `tags`
+
+1. 创建 `store/app` 中 `tagsViewList` 的快捷访问
+```js
+  /**
+   * tags标签数组
+   * @param {*} state
+   * @returns
+   */
+  tagsViewList: state => state.app.tagsViewList
+```
+
+2. 创建 `components/tagsview`
+
+```vue
+<template>
+    <div class="tags-view-container">
+        <router-link
+        class="tags-view-item"
+        :class="isActive(tag) ? 'active' : ''"
+        :style="{
+            backgroundColor: isActive(tag) ? $store.getters.cssVar.menuBg : '',
+            borderColor: isActive(tag) ? $store.getters.cssVar.menuBg : ''
+        }"
+        v-for="(tag, index) in $store.getters.tagsViewList"
+        :key="tag.fullPath"
+        :to="{ path: tag.fullPath }"
+        >
+        {{ tag.title }}
+        <i
+            v-show="!isActive(tag)"
+            class="el-icon-close"
+            @click.prevent.stop="onCloseClick(index)"
+        />
+        </router-link>
+    </div>
+</template>
+
+<script setup>
+import { useRoute } from 'vue-router'
+const route = useRoute()
+
+/**
+* 是否被选中
+*/
+const isActive = tag => {
+    return tag.path === route.path
+}
+
+/**
+* 关闭 tag 的点击事件
+*/
+const onCloseClick = index => {}
+</script>
+
+<style lang="scss" scoped>
+.tags-view-container {
+    height: 34px;
+    width: 100%;
+    background: #fff;
+    border-bottom: 1px solid #d8dce5;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 0 3px 0 rgba(0, 0, 0, 0.04);
+    .tags-view-item {
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+        height: 26px;
+        line-height: 26px;
+        border: 1px solid #d8dce5;
+        color: #495060;
+        background: #fff;
+        padding: 0 8px;
+        font-size: 12px;
+        margin-left: 5px;
+        margin-top: 4px;
+        &:first-of-type {
+        margin-left: 15px;
+        }
+        &:last-of-type {
+        margin-right: 15px;
+        }
+        &.active {
+        color: #fff;
+        &::before {
+            content: '';
+            background: #fff;
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: relative;
+            margin-right: 4px;
+        }
+        }
+        // close 按钮
+        .el-icon-close {
+        width: 16px;
+        height: 16px;
+        line-height: 10px;
+        vertical-align: 2px;
+        border-radius: 50%;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+        transform-origin: 100% 50%;
+        &:before {
+            transform: scale(0.6);
+            display: inline-block;
+            vertical-align: -3px;
+        }
+        &:hover {
+            background-color: #b4bccc;
+            color: #fff;
+        }
+        }
+    
+    }
+}
+</style>
+```
+
+   
+3. 在 `layout/index` 中导入
+
+```vue
+<div class="fixed-header">
+    <!-- 顶部的 navbar -->
+    <navbar />
+    <!-- tags -->
+    <tags-view></tags-view>
+</div>
+
+import TagsView from '@/components/TagsView'
+
+```
+
+tagsView 国际化处理
+
+`tagsView` 的国际化处理可以理解为修改现有 `tags` 的 `title`。
+
+步骤：
+
+1. 监听到语言变化
+2. 国际化对应的 `title` 即可
+
+根据方案，可生成如下代码：
+
+1. 在 `store/app` 中，创建修改 `ttile` 的 `mutations`
+
+```js
+    /**
+     * 为指定的 tag 修改 title
+     * @param {*} state
+     * @param {*} index => 需要替换的 tag 下标
+     * @param {*} tag => 新 tag 名
+     */
+    changeTagsView (state, { index, tag }) {
+      state.tagsViewList[index] = tag
+      setItem(TAGS_VIEW, state.tagsViewList)
+    },
+```
+
+2. 在 `appmain` 中监听语言变化
+
+```js
+import { generateTitle, watchSwitchLang } from '@/utils/i18n'
+/**
+ * 监听语言变化
+ */
+watchSwitchLang(() => {
+  /**
+     * 更改 tags 语言
+     */
+  store.getters.tagsViewList.forEach((route, index) => {
+    store.commit('app/changeTagsView', {
+      index,
+      tag: {
+        ...route,
+        title: getTitle(route)
+      }
+    })
+  })
+})
+```
+
+### contextMenu 展示处理
+
+> [contextMenu](https://developer.mozilla.org/zh-CN/docs/Web/API/Element/contextmenu_event) 为 鼠标右键事件
+
+[contextMenu](https://developer.mozilla.org/zh-CN/docs/Web/API/Element/contextmenu_event) 事件的处理分为两部分：
+
+1. `contextMenu` 的展示
+
+- 创建 `components/TagsView/ContextMenu` 组件，作为右键展示部分
+
+```vue
+<template>
+    <ul class="context-menu-container">
+    <li @click="onRefreshClick">
+        {{ $t('msg.tagsView.refresh') }}
+    </li>
+    <li @click="onCloseRightClick">
+        {{ $t('msg.tagsView.closeRight') }}
+    </li>
+    <li @click="onCloseOtherClick">
+        {{ $t('msg.tagsView.closeOther') }}
+    </li>
+    </ul>
+</template>
+
+<script setup>
+import { defineProps } from 'vue'
+defineProps({
+    index: {
+    type: Number,
+    required: true
+    }
+})
+
+const onRefreshClick = () => {}
+
+const onCloseRightClick = () => {}
+
+const onCloseOtherClick = () => {}
+</script>
+
+<style lang="scss" scoped>
+.context-menu-container {
+    position: fixed;
+    background: #fff;
+    z-index: 3000;
+    list-style-type: none;
+    padding: 5px 0;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #333;
+    box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
+    li {
+    margin: 0;
+    padding: 7px 16px;
+    cursor: pointer;
+    &:hover {
+        background: #eee;
+    }
+    }
+}
+</style>
+
+```
+
+- 在 `tagsview ` 中控制 `contextMenu` 的展示
+```vue
+<template>
+    <div class="tags-view-container">
+    <el-scrollbar class="tags-view-wrapper">
+        <router-link
+        ...
+        @contextmenu.prevent="openMenu($event, index)"
+        >
+        ...
+    </el-scrollbar>
+    <context-menu
+        v-show="visible"
+        :style="menuStyle"
+        :index="selectIndex"
+    ></context-menu>
+    </div>
+</template>
+```
+```js
+/**
+ * 鼠标右键点击事件
+ */
+const visible = ref(false)
+const menuStyle = ref({
+  left: 0,
+  top: 0
+})
+// 被点击的tag 的 index
+const selectIndex = ref(0)
+// 展示 menu
+const openMenu = (e, index) => {
+  // 鼠标点击时相对于屏幕的 x y 坐标
+  const { x, y } = e
+  menuStyle.value.left = x + 'px'
+  menuStyle.value.top = y + 'px'
+  selectIndex.value = index
+  visible.value = true
+}
+```
+2. 右键项对应逻辑处理
+
+ `contextMenu` 的事件一共分为三个：
+
+1. 刷新
+2. 关闭右侧
+3. 关闭所有
+
+1. 刷新事件
+
+```js
+const router = useRouter()
+/**
+ * 刷新页面事件
+ */
+const onRefreshClick = () => {
+  // 刷新
+  router.go(0)
+}
+```
+
+2. 在 `store/app` 中，创建删除 `tags` 的 `mutations`，该 `mutations` 需要同时具备以下三个能力：
+   1. 删除 “右侧”
+   2. 删除 “其他”
+   3. 删除 “当前”
+
+```js
+/**
+ * 为指定的 tag 修改 title
+ * @param {*} state
+ * @param {*} index => 需要替换的 tag 下标
+ * @param {*} tag => 新 tag 名
+ */
+changeTagsView (state, { index, tag }) {
+state.tagsViewList[index] = tag
+setItem(TAGS_VIEW, state.tagsViewList)
+},
+
+/**
+ * 删除 tag
+ * @param {type: 'other'||'right'||'index', index: index} payload
+ */
+removeTagsView (state, payload) {
+if (payload.type === 'index') {
+    // 删除当前
+    state.tagsViewList.splice(payload.index, 1)
+    return
+} else if (payload.type === 'other') {
+    // 删除其他
+    // 删除右侧
+    state.tagsViewList.splice(
+    payload.index + 1,
+    state.tagsViewList.length - payload.index + 1
+    )
+    // 删除左侧
+    state.tagsViewList.splice(0, payload.index)
+} else if (payload.type === 'right') {
+    // 删除右侧
+    state.tagsViewList.splice(
+    payload.index + 1,
+    state.tagsViewList.length - payload.index + 1
+    )
+}
+setItem(TAGS_VIEW, state.tagsViewList)
+}
+```
+
+4. 关闭右侧事件
+
+   ```js
+   const store = useStore()
+   const onCloseRightClick = () => {
+     store.commit('app/removeTagsView', {
+       type: 'right',
+       index: props.index
+     })
+   }
+   ```
+
+5. 关闭其他
+
+   ```js
+   const onCloseOtherClick = () => {
+     store.commit('app/removeTagsView', {
+       type: 'other',
+       index: props.index
+     })
+   }
+   ```
+
+6. 关闭当前（`tagsview`）
+
+   ```js
+   /**
+    * 关闭 tag 的点击事件
+    */
+   const store = useStore()
+   const onCloseClick = index => {
+     store.commit('app/removeTagsView', {
+       type: 'index',
+       index: index
+     })
+   }
+   ```
+
+### 处理 contextMenu 的关闭行为
+
+```js
+/**
+ * 当 visible 改变时监听点击事件
+ */
+watch(visible, val => {
+  if (val) {
+    document.body.addEventListener('click', closeMenu)
+  } else {
+    document.body.removeEventListener('click', closeMenu)
+  }
+})
+
+/**
+ * 关闭菜单事件
+ */
+const closeMenu = () => {
+  visible.value = false
+}
+```
+
+### 处理基于路由的动态过渡
+
+[处理基于路由的动态过渡](https://next.router.vuejs.org/zh/guide/advanced/transitions.html#%E5%9F%BA%E4%BA%8E%E8%B7%AF%E7%94%B1%E7%9A%84%E5%8A%A8%E6%80%81%E8%BF%87%E6%B8%A1)  官方已经给出了示例代码，结合 `router-view` 和 `transition` 我们可以非常方便的实现这个功能
+
+1. 在 `appmain` 中处理对应代码逻辑
+
+   ```vue
+   <template>
+     <div class="app-main">
+       <router-view v-slot="{ Component, route }">
+         <transition name="fade-transform" mode="out-in">
+           <keep-alive>
+             <component :is="Component" :key="route.path" />
+           </keep-alive>
+         </transition>
+       </router-view>
+     </div>
+   </template>
+   ```
+
+2. 增加了 `tags` 之后，`app-main` 的位置需要进行以下处理
+
+   ```vue
+   <style lang="scss" scoped>
+   .app-main {
+     min-height: calc(100vh - 50px - 43px);
+     ...
+     padding: 104px 20px 20px 20px;
+     ...
+   }
+   </style>
+   ```
+
+3. 在 `styles/transition` 中增加动画渲染
+
+   ```scss
+   /* fade-transform */
+   .fade-transform-leave-active,
+   .fade-transform-enter-active {
+     transition: all 0.5s;
+   }
+   
+   .fade-transform-enter-from {
+     opacity: 0;
+     transform: translateX(-30px);
+   }
+   
+   .fade-transform-leave-to {
+     opacity: 0;
+     transform: translateX(30px);
+   }
+   ```
