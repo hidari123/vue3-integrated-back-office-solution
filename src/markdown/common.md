@@ -22,6 +22,11 @@
     - [原理及方案分析](#%E5%8E%9F%E7%90%86%E5%8F%8A%E6%96%B9%E6%A1%88%E5%88%86%E6%9E%90)
     - [screenfull](#screenfull)
   - [页面搜索](#%E9%A1%B5%E9%9D%A2%E6%90%9C%E7%B4%A2)
+    - [创建 headerSearch 组件](#%E5%88%9B%E5%BB%BA-headersearch-%E7%BB%84%E4%BB%B6)
+    - [对检索数据源进行模糊搜索](#%E5%AF%B9%E6%A3%80%E7%B4%A2%E6%95%B0%E6%8D%AE%E6%BA%90%E8%BF%9B%E8%A1%8C%E6%A8%A1%E7%B3%8A%E6%90%9C%E7%B4%A2)
+    - [数据源重处理，生成  searchPool](#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%87%8D%E5%A4%84%E7%90%86%E7%94%9F%E6%88%90--searchpool)
+    - [渲染检索数据](#%E6%B8%B2%E6%9F%93%E6%A3%80%E7%B4%A2%E6%95%B0%E6%8D%AE)
+    - [剩余问题处理](#%E5%89%A9%E4%BD%99%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1684,3 +1689,656 @@ import Screenfull from '@/components/Screenfull'
 ```
 
 ## 页面搜索
+
+> 在指定搜索框中对当前应用中所有页面进行检索，以 `select` 的形式展示出被检索的页面，以达到快速进入的目的
+
+**原理：**
+
+整个 `headerSearch` 其实可以分为三个核心的功能点：
+
+1. 根据指定内容对所有页面进行检索
+2. 以 `select` 形式展示检索出的页面
+3. 通过检索页面可快速进入对应页面
+
+**根据指定内容检索所有页面，把检索出的页面以 `select` 展示，点击对应 `option` 可进入**
+
+**方案：**
+
+1. 创建 `headerSearch` 组件，用作样式展示和用户输入内容获取
+2. 获取所有的页面数据，用作被检索的数据源
+3. 根据用户输入内容在数据源中进行 [模糊搜索](https://fusejs.io/) 
+4. 把搜索到的内容以 `select` 进行展示
+5. 监听 `select` 的 `change` 事件，完成对应跳转
+
+
+### 创建 headerSearch 组件
+
+创建 `components/headerSearch/index` 组件：
+
+```vue
+<template>
+  <div class="header-search" :class="{show:isShow}">
+      <el-tooltip :content="$t('msg.navBar.headerSearch')">
+        <div @click.stop="onShowClick" >
+            <svg-icon id="guide-search" class-name="search-icon" icon="search" />
+        </div>
+      </el-tooltip>
+      <el-select
+        ref="headerSearchSelectRef"
+        class="header-search-select"
+        v-model="search"
+        filterable
+        default-first-option
+        remote
+        placeholder="Search"
+        :remote-method="querySearch"
+        @change="onSelectChange"
+      >
+        <el-option
+        v-for="option in 5"
+        :key="option"
+        :label="option"
+        :value="option"
+        ></el-option>
+      </el-select>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+// 控制 search 展示
+const isShow = ref(false)
+/**
+ * 当点击搜索按钮时显示搜索框
+ */
+const onShowClick = () => {
+  isShow.value = !isShow.value
+}
+
+// 搜索相关
+const search = ref('')
+</script>
+
+<style lang="scss" scoped>
+.header-search {
+  font-size: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  :deep(.search-icon) {
+    cursor: pointer;
+    font-size: 18px;
+    vertical-align: middle;
+  }
+  .header-search-select {
+    font-size: 18px;
+    transition: width 0.2s;
+    width: 0;
+    overflow: hidden;
+    background: transparent;
+    border-radius: 0;
+    display: inline-block;
+    vertical-align: middle;
+
+    :deep(.el-input__inner) {
+      border-radius: 0;
+      border: 0;
+      padding-left: 0;
+      padding-right: 0;
+      box-shadow: none !important;
+      border-bottom: 1px solid #d9d9d9;
+      vertical-align: middle;
+    }
+  }
+  &.show {
+    .header-search-select {
+      width: 210px;
+      margin-left: 10px;
+    }
+  }
+}
+</style>
+```
+
+在 `navbar` 中导入该组件
+
+```
+<header-search class="right-menu-item hover-effect"></header-search>
+import HeaderSearch from '@/components/HeaderSearch'
+```
+
+
+**检索数据源**: 有哪些页面希望检索
+
+本项目希望被检索的页面其实就是左侧菜单中的页面，检索数据源即为：**左侧菜单对应的数据源**
+
+实现：
+
+```vue
+<script setup>
+import { ref, computed } from 'vue'
+import { filterRouters, generateMenus } from '@/utils/route'
+import { useRouter } from 'vue-router'
+...
+// 检索数据源
+const router = useRouter()
+const searchPool = computed(() => {
+  const filterRoutes = filterRouters(router.getRoutes())
+  console.log(generateMenus(filterRoutes))
+  return generateMenus(filterRoutes)
+})
+console.log(searchPool)
+</script>
+```
+
+### 对检索数据源进行模糊搜索
+
+> [模糊搜索](https://fusejs.io/) 需要依赖一个第三方的库  [fuse.js](https://fusejs.io/) 
+
+1. 安装 [fuse.js](https://fusejs.io/)
+
+   ```
+   npm install --save fuse.js@6.4.6
+   ```
+
+2. 初始化 `Fuse`，更多初始化配置项 [可点击这里](https://fusejs.io/api/options.html)
+
+   ```js
+   import Fuse from 'fuse.js'
+   
+   /**
+    * 搜索库相关
+    */
+   const fuse = new Fuse(list, {
+       // 是否按优先级进行排序
+       shouldSort: true,
+       // 匹配长度超过这个值的才会被认为是匹配的
+       minMatchCharLength: 1,
+       // 将被搜索的键列表。 这支持嵌套路径、加权搜索、在字符串和对象数组中搜索。
+       // name：搜索的键
+       // weight：对应的权重
+       keys: [
+         {
+           name: 'title',
+           weight: 0.7
+         },
+         {
+           name: 'path',
+           weight: 0.3
+         }
+       ]
+     })
+   
+   ```
+
+3. 参考 [Fuse Demo](https://fusejs.io/demo.html) 与 最终效果，最终期望得到如下的检索数据源结构
+
+   ```json
+   [
+       {
+           "path":"/my",
+           "title":[
+               "个人中心"
+           ]
+       },
+       {
+           "path":"/user",
+           "title":[
+               "用户"
+           ]
+       },
+       {
+           "path":"/user/manage",
+           "title":[
+               "用户",
+               "用户管理"
+           ]
+       },
+       {
+           "path":"/user/info",
+           "title":[
+               "用户",
+               "用户信息"
+           ]
+       },
+       {
+           "path":"/article",
+           "title":[
+               "文章"
+           ]
+       },
+       {
+           "path":"/article/ranking",
+           "title":[
+               "文章",
+               "文章排名"
+           ]
+       },
+       {
+           "path":"/article/create",
+           "title":[
+               "文章",
+               "创建文章"
+           ]
+       }
+   ]
+   ```
+
+4. 对数据源进行重新处理
+
+### 数据源重处理，生成  searchPool
+
+创建 `compositions/HeaderSearch/fuseData.js`
+
+```js
+import i18n from '@/i18n'
+import path from 'path'
+
+/**
+ * 筛选出可供搜索的路由对象
+ * @param {Array} routes filter整理出的路由数组表
+ * @param {String} basePath 基础路径 默认为 /
+ * @param {Array} prefixTitle 搜索展示的标题
+ */
+export const generateRoutes = (routes, basePath = '/', prefixTitle = []) => {
+  // 创建 result 数据
+  let res = []
+
+  // 循环遍历 routes
+  for (const route of routes) {
+    // 创建包含 path 和 title 的 item
+    const data = {
+      path: path.resolve(basePath, route.path),
+      title: [...prefixTitle]
+    }
+
+    // 当前存在 mata 时 使用 i18n 进行国际化解析 组合成新的 title
+    // 动态路由不允许被检索
+    // 正则 判断动态路由 只要路径中包含冒号 就判定为动态路由
+    const re = /.*\/:.*/
+    if (route.meta && route.meta.title && !re.exec(route.path)) {
+      // 有title并且不是动态路由 用 i18n处理国际化
+      const i18nTitle = i18n.global.t(`msg.route.${route.meta.title}`)
+      data.title = [...data.title, i18nTitle]
+      res.push(data)
+    }
+
+    // 存在 children 迭代处理
+    if (route.children) {
+      const tempRoutes = generateRoutes(route.children, data.path, data.title)
+      if (tempRoutes.length > 0) {
+        res = [...res, ...tempRoutes]
+      }
+    }
+  }
+  return res
+}
+```
+
+在 `headerSearch` 中导入 `generateRoutes`
+
+```vue
+<script setup>
+import { computed, ref } from 'vue'
+import { generateRoutes } from './FuseData'
+import Fuse from 'fuse.js'
+import { filterRouters } from '@/utils/route'
+import { useRouter } from 'vue-router'
+
+...
+
+// 检索数据源
+const router = useRouter()
+const searchPool = computed(() => {
+  const filterRoutes = filterRouters(router.getRoutes())
+  return generateRoutes(filterRoutes)
+})
+/**
+ * 搜索库相关
+ */
+const fuse = new Fuse(searchPool.value, {
+  ...
+})
+</script>
+```
+
+通过 `querySearch` 测试搜索结果
+
+```js
+// 搜索方法
+const querySearch = query => {
+  console.log(fuse.search(query))
+}
+```
+
+### 渲染检索数据
+
+1. 渲染检索出的数据
+
+```vue
+<template>
+    <el-option
+        v-for="option in searchOptions"
+        :key="option.item.path"
+        :label="option.item.title.join(' > ')"
+        :value="option.item"
+    ></el-option>
+</template>
+
+<script setup>
+...
+// 搜索结果
+const searchOptions = ref([])
+// 搜索方法
+const querySearch = query => {
+    if (query !== '') {
+    searchOptions.value = fuse.search(query)
+    } else {
+    searchOptions.value = []
+    }
+}
+...
+</script>
+```
+
+   
+
+2. 完成对应跳转
+
+```js
+// 选中回调
+const onSelectChange = val => {
+    router.push(val.path)
+}
+```
+
+### 剩余问题处理
+
+1. 在 `search` 打开时，点击 `body` 关闭 `search`
+2. 在 `search` 关闭时，清理 `searchOptions`
+3. `headerSearch` 应该具备国际化能力
+
+前面两个问题：
+
+```js
+/**
+ * 关闭 search 的处理事件
+ */
+const onClose = () => {
+  headerSearchSelectRef.value.blur()
+  isShow.value = false
+  searchOptions.value = []
+}
+
+/**
+ * 监听isShow变化 点击body 完成关闭搜索框
+ */
+watch(isShow, val => {
+  if (val) {
+    // 搜索框获得焦点
+    headerSearchSelectRef.value.focus()
+    document.body.addEventListener('click', onClose)
+  } else {
+    document.removeEventListener('click', onClose)
+  }
+})
+```
+
+国际化的问题: 
+
+**监听语言变化，重新计算数据源初始化 `fuse`**
+
+1. 在 `utils/i18n` 下，新建方法 `watchSwitchLang`
+
+   ```js
+   import { watch } from 'vue'
+   import store from '@/store'
+   
+    /**
+    * 监听语言变化 同时执行回调函数
+    * @param  {...any} cbs 回调函数（可以多个）
+    */
+    export const watchSwitchLang = (...cbs) => {
+    watch(() => store.getters.language,
+        () => {
+        // 遍历执行回调函数 传入语言
+        cbs.forEach(cb => cb(store.getters.language))
+        })
+    }
+   ```
+
+2. 在 `headerSearch` 监听变化，重新赋值
+
+```vue
+<script setup>
+...
+import { watchSwitchLang } from '@/utils/i18n'
+
+...
+/**
+ * 处理数据源
+ */
+let searchPool = computed(() => {
+  // 筛选出所有需要的路由
+  const routes = filterRouters(router.getRoutes())
+  return generateRoutes(routes)
+})
+
+/**
+ * 搜索库相关
+ * @param {Object} searchPool => 搜索库
+ * @param {Object}  配置项 keys => 搜索方法权重配置
+ */
+let fuse
+const initFuse = searchPool => {
+  fuse = new Fuse(searchPool, {
+      ...
+  })
+}
+initFuse(searchPool.value)
+
+...
+   
+/**
+ * 监听语言变化
+ */
+watchSwitchLang(() => {
+  // 监听语言变化的回调函数
+  searchPool = computed(() => {
+    // 重新筛选出所有需要的路由
+    const routes = filterRouters(router.getRoutes())
+    return generateRoutes(routes)
+  })
+  initFuse(searchPool.value)
+})
+</script>
+```
+
+完整代码
+```vue
+<template>
+  <div class="header-search" :class="{show:isShow}">
+      <el-tooltip :content="$t('msg.navBar.headerSearch')">
+        <div @click.stop="onShowClick" >
+            <svg-icon id="guide-search" class-name="search-icon" icon="search" />
+        </div>
+      </el-tooltip>
+      <el-select
+        ref="headerSearchSelectRef"
+        class="header-search-select"
+        v-model="search"
+        filterable
+        default-first-option
+        remote
+        placeholder="Search"
+        :remote-method="querySearch"
+        @change="onSelectChange"
+      >
+        <el-option
+        v-for="option in searchOptions"
+        :key="option.item.path"
+        :label="option.item.title.join(' > ')"
+        :value="option.item"
+        ></el-option>
+      </el-select>
+  </div>
+</template>
+
+<script setup>
+import { filterRouters } from '@/utils/route'
+import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { generateRoutes } from './fuseData'
+// 导入第三方包模糊搜索
+import Fuse from 'fuse.js'
+import { watchSwitchLang } from '@/utils/i18n'
+
+const router = useRouter()
+/**
+ * 处理数据源
+ */
+let searchPool = computed(() => {
+  // 筛选出所有需要的路由
+  const routes = filterRouters(router.getRoutes())
+  return generateRoutes(routes)
+})
+
+/**
+ * 搜索库相关
+ * @param {Object} searchPool => 搜索库
+ * @param {Object}  配置项 keys => 搜索方法权重配置
+ */
+let fuse
+const initFuse = searchPool => {
+  fuse = new Fuse(searchPool, {
+  // 是否按优先级进行排序
+    shouldSort: true,
+    // 匹配长度超过这个值的才会被认为是匹配的
+    minMatchCharLength: 1,
+    // 将被搜索的键列表。 这支持嵌套路径、加权搜索、在字符串和对象数组中搜索。
+    // name：搜索的键
+    // weight：对应的权重
+    keys: [
+      {
+        name: 'title',
+        weight: 0.7
+      },
+      {
+        name: 'path',
+        weight: 0.3
+      }
+    ]
+  })
+}
+initFuse(searchPool.value)
+
+// 控制 search 展示
+const isShow = ref(false)
+// 搜索框ref
+const headerSearchSelectRef = ref(null)
+/**
+ * 当点击搜索按钮时显示搜索框
+ */
+const onShowClick = () => {
+  isShow.value = !isShow.value
+}
+
+/**
+ * 监听isShow变化 点击body 完成关闭搜索框
+ */
+watch(isShow, val => {
+  if (val) {
+    // 搜索框获得焦点
+    headerSearchSelectRef.value.focus()
+    document.body.addEventListener('click', onClose)
+  } else {
+    document.removeEventListener('click', onClose)
+  }
+})
+
+/**
+ * 关闭搜索框事件
+ */
+const onClose = () => {
+  // 搜索框失去焦点
+  headerSearchSelectRef.value.blur()
+  isShow.value = !isShow.value
+}
+
+// 搜索相关
+const search = ref('')
+
+// 储存搜索结果数组
+const searchOptions = ref([])
+/**
+ * 搜索方法
+ * @param {String} query => 输入的搜索内容
+ */
+const querySearch = (query) => {
+  searchOptions.value = query === '' ? [] : fuse.search(query)
+}
+
+/**
+ * 选中回调
+ * @param {Object} val => 输入的搜索内容对应的搜索结果中的item项
+ */
+const onSelectChange = (val) => {
+  // 改变 search 显示
+  search.value = val.title.join(' > ')
+  router.push(val.path)
+}
+
+/**
+ * 监听语言变化
+ */
+watchSwitchLang(() => {
+  // 监听语言变化的回调函数
+  searchPool = computed(() => {
+    // 重新筛选出所有需要的路由
+    const routes = filterRouters(router.getRoutes())
+    return generateRoutes(routes)
+  })
+  initFuse(searchPool.value)
+})
+</script>
+
+<style lang="scss" scoped>
+.header-search {
+  font-size: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  :deep(.search-icon) {
+    cursor: pointer;
+    font-size: 18px;
+    vertical-align: middle;
+  }
+  .header-search-select {
+    font-size: 18px;
+    transition: width 0.2s;
+    width: 0;
+    overflow: hidden;
+    background: transparent;
+    border-radius: 0;
+    display: inline-block;
+    vertical-align: middle;
+
+    :deep(.el-input__inner) {
+      border-radius: 0;
+      border: 0;
+      padding-left: 0;
+      padding-right: 0;
+      box-shadow: none !important;
+      border-bottom: 1px solid #d9d9d9;
+      vertical-align: middle;
+    }
+  }
+  &.show {
+    .header-search-select {
+      width: 210px;
+      margin-left: 10px;
+    }
+  }
+}
+</style>
+```

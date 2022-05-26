@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 11:17:17
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 15:54:31
+ * @LastEditTime: 2022-05-26 11:25:32
  * @FilePath: \vue3-integrated-back-office-solution\src\components\breadcrumb\index.vue
  * @Description: 面包屑导航
  *
@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import generateTitle from '@/utils/i18n'
+import { generateTitle } from '@/utils/i18n'
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'

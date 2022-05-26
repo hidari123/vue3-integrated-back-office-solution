@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-24 15:53:04
+ * @LastEditTime: 2022-05-26 11:25:37
  * @FilePath: \vue3-integrated-back-office-solution\src\layout\components\Sidebar\MenuItem.vue
  * @Description: 左侧菜单children项
  *
@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import generateTitle from '@/utils/i18n'
+import { generateTitle } from '@/utils/i18n'
 import { defineProps } from 'vue'
 defineProps({
   title: {
