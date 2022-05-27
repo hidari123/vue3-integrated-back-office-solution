@@ -1,3 +1,13 @@
+/*
+ * @Author: hidari
+ * @Date: 2022-05-24 09:08:25
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-05-27 10:01:13
+ * @FilePath: \vue3-integrated-back-office-solution\src\utils\request.js
+ * @Description: 封装 request 请求
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
+ */
 import axios from 'axios'
 import store from '@/store'
 import { ElMessage } from 'element-plus'
@@ -20,6 +30,8 @@ service.interceptors.request.use(config => {
     // 如果token存在 注入token
     config.headers.Authorization = `Bearer ${store.getters.token}`
   }
+  // 配置接口国际化
+  config.headers['Accept-Language'] = store.getters.language
   // 必须返回配置
   return config
 },

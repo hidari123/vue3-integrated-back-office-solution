@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-26 16:50:36
+ * @LastEditTime: 2022-05-26 20:27:21
  * @FilePath: \vue3-integrated-back-office-solution\src\layout\components\AppMain.vue
  * @Description: 主页面main容器
  *
@@ -83,7 +83,7 @@ watchSwitchLang(() => {
   width: 100%;
   position: relative;
   overflow: hidden;
-  padding: 61px 20px 20px 20px;
+  padding: 20px;
   box-sizing: border-box;
 }
 </style>

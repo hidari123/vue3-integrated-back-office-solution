@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-26 13:16:03
+ * @LastEditTime: 2022-05-27 14:52:53
  * @FilePath: \vue3-integrated-back-office-solution\src\store\getters.js
  * @Description: 快捷访问
  *
@@ -72,7 +72,13 @@ const getters = {
    * @param {*} state
    * @returns
    */
-  tagsViewList: state => state.app.tagsViewList
+  tagsViewList: state => state.app.tagsViewList,
+  /**
+   * 折线图数据
+   * @param {*} state
+   * @returns
+   */
+  lineChartData: state => state.lineChart.lineChartData
 }
 
 export default getters
