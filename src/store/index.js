@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-27 14:52:31
+ * @LastEditTime: 2022-05-30 12:20:52
  * @FilePath: \vue3-integrated-back-office-solution\src\store\index.js
  * @Description: 仓库主文件
  *
@@ -14,6 +14,7 @@ import app from './modules/app'
 import theme from './modules/theme'
 import getters from './getters'
 import lineChart from './modules/lineChart'
+import todo from './modules/todo'
 
 export default createStore({
   getters,
@@ -21,6 +22,7 @@ export default createStore({
     user,
     app,
     theme,
-    lineChart
+    lineChart,
+    todo
   }
 })

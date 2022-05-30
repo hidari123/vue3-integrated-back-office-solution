@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-26 12:47:06
+ * @LastEditTime: 2022-05-30 12:02:09
  * @FilePath: \vue3-integrated-back-office-solution\src\constant\index.js
  * @Description: 定义常量 便于维护
  *
@@ -29,3 +29,6 @@ export const DEFAULT_COLOR = '#409eff'
 
 // tags标签
 export const TAGS_VIEW = 'tagsView'
+
+// todo 本地存储
+export const TODO_KEYS = 'todos'

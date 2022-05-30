@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-27 14:52:53
+ * @LastEditTime: 2022-05-30 14:04:12
  * @FilePath: \vue3-integrated-back-office-solution\src\store\getters.js
  * @Description: 快捷访问
  *
@@ -78,7 +78,14 @@ const getters = {
    * @param {*} state
    * @returns
    */
-  lineChartData: state => state.lineChart.lineChartData
+  lineChartData: state => state.lineChart.lineChartData,
+
+  /**
+   * todos列表
+   * @param {*} state
+   * @returns
+   */
+  todos: state => state.todo.todos
 }
 
 export default getters

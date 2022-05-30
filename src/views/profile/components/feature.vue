@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-26 20:10:22
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-27 17:27:33
+ * @LastEditTime: 2022-05-30 16:31:04
  * @FilePath: \vue3-integrated-back-office-solution\src\views\profile\components\feature.vue
  * @Description: 功能
  *
@@ -36,15 +36,15 @@
     </el-row>
 
     <el-row :gutter="8">
-      <el-col :xs="{span: 24}" :sm="{span: 24}" :md="{span: 24}" :lg="{span: 12}" :xl="{span: 12}" style="padding-right:8px;margin-bottom:30px;">
+      <el-col :xs="{span: 24}" :sm="{span: 32}" :md="{span: 32}" :lg="{span: 16}" :xl="{span: 16}" style="padding-right:8px;margin-bottom:30px;">
         <transaction-table />
       </el-col>
-      <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
+      <el-col :xs="{span: 24}" :sm="{span: 16}" :md="{span: 16}" :lg="{span: 8}" :xl="{span: 8}" style="margin-bottom:30px;">
         <todo-list />
       </el-col>
-      <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
+      <!-- <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
         <box-card />
-      </el-col>
+      </el-col> -->
     </el-row>
   </div>
 </template>
@@ -57,6 +57,7 @@ import PieChart from './echarts/pieChart.vue'
 import RaddarChart from './echarts/raddarChart.vue'
 import panelGroup from './echarts/panelGroup.vue'
 import transactionTable from './transactionTable.vue'
+import TodoList from './todoList/index.vue'
 // 折线图数据
 import { lineChartData } from '@/constant/lineChart'
 import { useStore } from 'vuex'
