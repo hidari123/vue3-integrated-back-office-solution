@@ -1,5 +1,12 @@
-/**
- * 路由表相关方法
+/*
+ * @Author: hidari
+ * @Date: 2022-05-24 12:52:37
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-06-01 09:26:01
+ * @FilePath: \vue3-integrated-back-office-solution\src\utils\route.js
+ * @Description: 路由表相关方法
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
  */
 
 import path from 'path'

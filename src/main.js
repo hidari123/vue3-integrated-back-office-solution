@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-26 13:55:40
+ * @LastEditTime: 2022-06-01 14:27:00
  * @FilePath: \vue3-integrated-back-office-solution\src\main.js
  * @Description: 主入口文件
  *
@@ -23,6 +23,10 @@ import installIcons from '@/icons'
 import './promission.js'
 // 引入 element-icon
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+// 全局属性
+import installFilter from '@/filter'
+// 自定义指令
+import installDirective from '@/directives'
 
 const app = createApp(App)
 
@@ -32,6 +36,8 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 installElementPlus(app)
 installIcons(app)
+installFilter(app)
+installDirective(app)
 app
   .use(store)
   .use(router)

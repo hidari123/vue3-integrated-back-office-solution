@@ -1,3 +1,14 @@
+/*
+ * @Author: hidari
+ * @Date: 2022-05-24 09:08:25
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-06-01 09:27:42
+ * @FilePath: \vue3-integrated-back-office-solution\src\store\modules\user.js
+ * @Description: user 相关仓库
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
+ */
+
 import { getUserInfo, login } from '@/api/sys'
 import MD5 from 'md5'
 import { setItem, getItem, removeAllItem } from '@/utils/storage'

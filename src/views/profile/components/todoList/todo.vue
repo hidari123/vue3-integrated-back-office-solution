@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-30 11:52:10
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-30 15:35:49
+ * @LastEditTime: 2022-06-01 14:08:26
  * @FilePath: \vue3-integrated-back-office-solution\src\views\profile\components\todoList\todo.vue
  * @Description: todoList 每一项
  *
@@ -19,12 +19,14 @@
         type="checkbox"
         @change="toggleTodo(todo)"
       >
+      <!-- dblclick 双击 -->
       <label @dblclick="editing = true" v-text="todo.text" />
       <button class="destroy" @click="deleteTodo( todo )" />
     </div>
     <input
       v-show="editing"
       :value="todo.text"
+      v-focus="editing"
       class="edit"
       @keyup.enter="doneEdit"
       @keyup.esc="cancelEdit"
@@ -47,16 +49,28 @@ const props = defineProps({
 
 const store = useStore()
 const editing = ref(false)
+/**
+ * 删除
+ */
 const deleteTodo = (todo) => {
   console.log(todo)
   store.commit('todo/deleteTodo', todo)
 }
+/**
+ * 修改
+ */
 const editTodo = ({ todo, value }) => {
   store.commit('todo/editTodo', { todo, value })
 }
+/**
+ * 切换
+ */
 const toggleTodo = (todo) => {
   store.commit('todo/toggleTodo', todo)
 }
+/**
+ * 修改完成
+ */
 const doneEdit = (e) => {
   const value = e.target.value.trim()
   const { todo } = props
@@ -72,6 +86,9 @@ const doneEdit = (e) => {
     editing.value = false
   }
 }
+/**
+ * 取消修改
+ */
 const cancelEdit = (e) => {
   e.target.value = props.todo.text
   editing.value = false

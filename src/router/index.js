@@ -1,3 +1,14 @@
+/*
+ * @Author: hidari
+ * @Date: 2022-05-24 12:52:37
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-06-01 11:54:33
+ * @FilePath: \vue3-integrated-back-office-solution\src\router\index.js
+ * @Description: 路由入口文件
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
+ */
+
 import { createRouter, createWebHashHistory } from 'vue-router'
 import layout from '@/layout'
 
@@ -42,6 +53,7 @@ const privateRoutes = [
         path: '/user/info/:id',
         name: 'userInfo',
         component: () => import('@/views/user-info/index'),
+        props: true,
         meta: {
           title: 'userInfo'
         }

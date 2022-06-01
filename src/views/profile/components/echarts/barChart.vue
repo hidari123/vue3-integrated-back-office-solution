@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-27 12:33:50
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-27 12:55:31
+ * @LastEditTime: 2022-06-01 13:52:46
  * @FilePath: \vue3-integrated-back-office-solution\src\views\profile\components\echarts\barChart.vue
  * @Description: 条形图
  *
@@ -102,7 +102,3 @@ const initChart = () => {
   })
 }
 </script>
-
-<style>
-
-</style>

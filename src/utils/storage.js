@@ -1,6 +1,14 @@
-/**
- * 存储数据
+/*
+ * @Author: hidari
+ * @Date: 2022-05-20 12:52:37
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-06-01 09:26:28
+ * @FilePath: \vue3-integrated-back-office-solution\src\utils\storage.js
+ * @Description: 存储数据
+ *
+ * Copyright (c) 2022 by 1640106564@qq.com, All Rights Reserved.
  */
+
 export const setItem = (key, value) => {
   // value 分为两种情况
   // 1. 复杂数据类型

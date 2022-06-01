@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-27 17:14:02
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-27 17:46:10
+ * @LastEditTime: 2022-06-01 13:57:05
  * @FilePath: \vue3-integrated-back-office-solution\src\views\profile\components\transactionTable.vue
  * @Description: 业务列表
  *
@@ -28,7 +28,7 @@
 
 <script setup>
 import { transactionList } from '@/api/user'
-import { ref } from '@vue/reactivity'
+import { ref } from 'vue'
 const list = ref([])
 transactionList().then(res => {
   list.value = res.items.slice(0, 8)

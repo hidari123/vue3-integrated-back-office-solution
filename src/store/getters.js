@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-30 14:04:12
+ * @LastEditTime: 2022-06-01 13:44:02
  * @FilePath: \vue3-integrated-back-office-solution\src\store\getters.js
  * @Description: 快捷访问
  *
@@ -73,6 +73,7 @@ const getters = {
    * @returns
    */
   tagsViewList: state => state.app.tagsViewList,
+
   /**
    * 折线图数据
    * @param {*} state

@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-27 12:33:50
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-27 15:09:38
+ * @LastEditTime: 2022-06-01 13:45:19
  * @FilePath: \vue3-integrated-back-office-solution\src\views\profile\components\echarts\lineChart.vue
  * @Description: 折线图
  *
@@ -56,6 +56,8 @@ onBeforeUnmount(() => {
   myChart = null
 })
 const store = useStore()
+
+// 监听数据变化动态加载 echarts
 watch(() => store.getters.lineChartData, (val) => {
   console.log(val)
   setOptions(val)
@@ -67,6 +69,7 @@ const initChart = () => {
   myChart = echarts.init(lineChart.value, 'macarons')
   setOptions(props.chartData)
 }
+// 因为需要动态改变 所以抽成函数
 const setOptions = ({ expectedData, actualData } = {}) => {
   myChart.setOption({
     xAxis: {

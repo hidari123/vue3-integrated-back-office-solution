@@ -614,7 +614,7 @@ import avatar from '@/images/avatar.jpg'
     float: right;
     padding-right: 16px;
 
-    ::v-deep .avatar-container {
+    :deep(.avatar-container) {
       cursor: pointer;
       .avatar-wrapper {
         margin-top: 5px;
@@ -2122,7 +2122,7 @@ import {} from 'vue'
   line-height: 50px;
   margin-left: 8px;
 
-  ::v-deep .no-redirect {
+  :deep(.no-redirect) {
     color: #97a8be;
     cursor: text;
   }
