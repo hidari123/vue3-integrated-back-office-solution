@@ -1,8 +1,8 @@
 /*
  * @Author: lijiaying 1640106564@qq.com
  * @Date: 2022-05-24 09:08:25
- * @LastEditors: lijiaying 1640106564@qq.com
- * @LastEditTime: 2022-05-24 09:12:40
+ * @LastEditors: hidari
+ * @LastEditTime: 2022-06-02 14:02:17
  * @FilePath: \vue3-integrated-back-office-solution\src\promission.js
  * @Description: 权限管理
  */
@@ -28,7 +28,15 @@ router.beforeEach(async (to, from, next) => {
       // 若不存在用户信息，则需要获取用户信息
       if (!store.getters.hasUserInfo) {
         // 触发获取用户信息的 action
-        await store.dispatch('user/getUserInfo')
+        const { permission } = await store.dispatch('user/getUserInfo')
+        // 处理用户权限 筛选出需要添加的路由
+        const filterRoutes = await store.dispatch('permission/filterRoutes', permission.menus)
+        // 循环添加动态路由
+        filterRoutes.forEach(item => {
+          router.addRoute(item)
+        })
+        // 添加完动态路由后需要进行一次主动跳转 这样添加的路由才能生效
+        return next(to.path)
       }
       next()
     }

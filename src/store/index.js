@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-05-30 12:20:52
+ * @LastEditTime: 2022-06-02 13:07:39
  * @FilePath: \vue3-integrated-back-office-solution\src\store\index.js
  * @Description: 仓库主文件
  *
@@ -15,6 +15,7 @@ import theme from './modules/theme'
 import getters from './getters'
 import lineChart from './modules/lineChart'
 import todo from './modules/todo'
+import permission from './modules/permission'
 
 export default createStore({
   getters,
@@ -23,6 +24,7 @@ export default createStore({
     app,
     theme,
     lineChart,
-    todo
+    todo,
+    permission
   }
 })

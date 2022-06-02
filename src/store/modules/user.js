@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-06-01 09:27:42
+ * @LastEditTime: 2022-06-02 16:41:07
  * @FilePath: \vue3-integrated-back-office-solution\src\store\modules\user.js
  * @Description: user 相关仓库
  *
@@ -13,7 +13,7 @@ import { getUserInfo, login } from '@/api/sys'
 import MD5 from 'md5'
 import { setItem, getItem, removeAllItem } from '@/utils/storage'
 import { TOKEN } from '@/constant'
-import router from '@/router'
+import router, { resetRouter } from '@/router'
 import { setTimeStamp } from '@/utils/auth'
 export default {
   namespaced: true,
@@ -61,22 +61,23 @@ export default {
     },
     /**
      * 获取用户信息
-     * @param context
+     * @param commit
      * @returns {Promise<AxiosResponse<any>>}
      */
-    async getUserInfo (context) {
+    async getUserInfo ({ commit }) {
       const res = await getUserInfo()
-      this.commit('user/setUserInfo', res)
+      commit('setUserInfo', res)
       return res
     },
     /**
      * 退出登录
      */
-    logout () {
-      this.commit('user/setToken', '')
-      this.commit('user/setUserInfo', {})
+    logout ({ commit }) {
+      commit('setToken', '')
+      commit('setUserInfo', {})
       removeAllItem()
-      // TODO: 清理权限相关配置
+      // 清理权限相关配置
+      resetRouter()
       router.push('/login')
     }
   }

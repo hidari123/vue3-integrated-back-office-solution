@@ -1,3 +1,30 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [员工管理模块](#%E5%91%98%E5%B7%A5%E7%AE%A1%E7%90%86%E6%A8%A1%E5%9D%97)
+  - [用户列表分页展示](#%E7%94%A8%E6%88%B7%E5%88%97%E8%A1%A8%E5%88%86%E9%A1%B5%E5%B1%95%E7%A4%BA)
+  - [全局属性处理时间展示问题](#%E5%85%A8%E5%B1%80%E5%B1%9E%E6%80%A7%E5%A4%84%E7%90%86%E6%97%B6%E9%97%B4%E5%B1%95%E7%A4%BA%E9%97%AE%E9%A2%98)
+  - [excel 导入](#excel-%E5%AF%BC%E5%85%A5)
+    - [原理与实现分析](#%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90)
+    - [提供两种文件导入形式](#%E6%8F%90%E4%BE%9B%E4%B8%A4%E7%A7%8D%E6%96%87%E4%BB%B6%E5%AF%BC%E5%85%A5%E5%BD%A2%E5%BC%8F)
+    - [文件选择之后的数据解析处理](#%E6%96%87%E4%BB%B6%E9%80%89%E6%8B%A9%E4%B9%8B%E5%90%8E%E7%9A%84%E6%95%B0%E6%8D%AE%E8%A7%A3%E6%9E%90%E5%A4%84%E7%90%86)
+    - [传递解析后的 excel 数据](#%E4%BC%A0%E9%80%92%E8%A7%A3%E6%9E%90%E5%90%8E%E7%9A%84-excel-%E6%95%B0%E6%8D%AE)
+    - [处理剩余 bug](#%E5%A4%84%E7%90%86%E5%89%A9%E4%BD%99-bug)
+  - [用户删除](#%E7%94%A8%E6%88%B7%E5%88%A0%E9%99%A4)
+  - [excel 导出](#excel-%E5%AF%BC%E5%87%BA)
+    - [原理与实现分析](#%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90-1)
+    - [Export2Excel 组件](#export2excel-%E7%BB%84%E4%BB%B6)
+    - [导出前置业务处理](#%E5%AF%BC%E5%87%BA%E5%89%8D%E7%BD%AE%E4%B8%9A%E5%8A%A1%E5%A4%84%E7%90%86)
+    - [实现 excel 导出逻辑](#%E5%AE%9E%E7%8E%B0-excel-%E5%AF%BC%E5%87%BA%E9%80%BB%E8%BE%91)
+  - [局部打印](#%E5%B1%80%E9%83%A8%E6%89%93%E5%8D%B0)
+    - [详情原理与实现分析](#%E8%AF%A6%E6%83%85%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90)
+    - [获取展示数据](#%E8%8E%B7%E5%8F%96%E5%B1%95%E7%A4%BA%E6%95%B0%E6%8D%AE)
+    - [渲染详情结构](#%E6%B8%B2%E6%9F%93%E8%AF%A6%E6%83%85%E7%BB%93%E6%9E%84)
+    - [局部打印功能实现](#%E5%B1%80%E9%83%A8%E6%89%93%E5%8D%B0%E5%8A%9F%E8%83%BD%E5%AE%9E%E7%8E%B0)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <!--
  * @Author: hidari
  * @Date: 2022-06-01 14:49:58
@@ -1442,6 +1469,8 @@ const onShowClick = id => {
 
 [el-descriptions](https://element-plus.org/zh-CN/component/descriptions.html) 组件作用为：渲染描述列表。
 但是本项目期望包含头像的用户详情样式，直接利用一个 [el-descriptions](https://element-plus.org/zh-CN/component/descriptions.html) 组件并无法进行渲染，所以此时需要对多个 [el-descriptions](https://element-plus.org/zh-CN/component/descriptions.html) 组件 与 `img` 标签进行配合使用
+
+![渲染详情结构](./images/image-20210929233418837.png)
 
 渲染代码：
 ```vue

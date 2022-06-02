@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-24 09:08:25
  * @LastEditors: hidari
- * @LastEditTime: 2022-06-01 15:40:47
+ * @LastEditTime: 2022-06-02 15:17:44
  * @FilePath: \vue3-integrated-back-office-solution\src\views\user-manage\index.vue
  * @Description: 用户管理模块
  *
@@ -13,7 +13,10 @@
     <el-card class="header">
       <div>
           <!-- 导入 -->
-        <el-button type="primary" @click="onImportExcelClick"> {{ $t('msg.excel.importExcel') }}</el-button>
+        <el-button type="primary"
+         @click="onImportExcelClick"
+         v-permission="['importUser']"
+        > {{ $t('msg.excel.importExcel') }}</el-button>
         <!-- 导出 -->
         <el-button type="success" @click="onToExcelClick">
           {{ $t('msg.excel.exportExcel') }}
@@ -70,11 +73,16 @@
               $t('msg.excel.show')
             }}</el-button>
             <!-- 角色 -->
-            <el-button type="info" size="mini">{{
+            <el-button type="info" size="mini"
+             v-permission="['distributeRole']"
+             @click="onShowRoleClick(row)">{{
               $t('msg.excel.showRole')
             }}</el-button>
             <!-- 删除 -->
-            <el-button type="danger" size="mini" @click="onRemoveClick(row)">{{
+            <el-button type="danger"
+             size="mini"
+             v-permission="['removeUser']"
+             @click="onRemoveClick(row)">{{
               $t('msg.excel.remove')
             }}</el-button>
           </template>
@@ -95,6 +103,7 @@
     </el-card>
 
     <export-to-excel v-model="exportToExcelVisible"></export-to-excel>
+    <roles-dialog v-model="roleDialogVisible" :userId="selectUserId" @updateRole="getListData"/>
   </div>
 </template>
 
@@ -102,12 +111,13 @@
 import { deleteUser, getUserManageList } from '@/api/user-manager'
 import { watchSwitchLang } from '@/utils/i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { onActivated, ref } from 'vue'
+import { onActivated, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import ExportToExcel from './components/export2Excel.vue'
+import RolesDialog from './components/roles.vue'
 // 权限
-const power = ['超级管理员', '管理员', '普通员工']
+const power = ['超级管理员', '管理员', '人事经理', '销售经理', '保安队长', '员工']
 // 数据相关
 const tableData = ref([])
 const total = ref(0)
@@ -170,6 +180,26 @@ const onImportExcelClick = () => {
 const onShowClick = (id) => {
   router.push(`/user/info/${id}`)
 }
+
+/**
+ * 查看角色的点击事件
+ * 为员工分配角色
+ */
+const roleDialogVisible = ref(false)
+const selectUserId = ref('')
+const onShowRoleClick = row => {
+  roleDialogVisible.value = true
+  selectUserId.value = row._id
+}
+
+/**
+ * 因为只有在切换角色时才会触发查看角色接口
+ * 所以用 watch 监听dialog关闭事件 把 selectUserId 置空
+ * 保证每次打开 dialog 都能获取到数据
+ */
+watch(roleDialogVisible, val => {
+  if (!val) selectUserId.value = ''
+})
 
 /**
  * 删除用户
