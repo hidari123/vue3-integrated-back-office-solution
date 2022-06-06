@@ -380,7 +380,6 @@ PS：详细的 `HOOKS介绍` 可点击[这里](https://git-scm.com/docs/githooks
    npm set-script prepare "husky install"
    ```
 
-   <img src="第二章：标准化大厂编程规范解决方案之ESLint + Git Hooks .assets/image-20210906202128323.png" alt="image-20210906202128323" style="zoom:50%;" />
 
 4. 执行 `prepare` 指令
 
@@ -388,10 +387,7 @@ PS：详细的 `HOOKS介绍` 可点击[这里](https://git-scm.com/docs/githooks
    npm run prepare
    ```
 
-5. 执行成功，提示
-   <img src=" 第二章：标准化大厂编程规范解决方案之ESLint + Git Hooks .assets/image-20210710120053221.png" alt="image-20210710120053221" style="zoom:80%;" />
-
-6. 添加 `commitlint` 的 `hook` 到 `husky`中，并指令在 `commit-msg` 的 `hooks` 下执行 `npx --no-install commitlint --edit "$1"` 指令
+5. 添加 `commitlint` 的 `hook` 到 `husky`中，并指令在 `commit-msg` 的 `hooks` 下执行 `npx --no-install commitlint --edit "$1"` 指令
 
    ```
    npx husky add .husky/commit-msg 'npx --no-install commitlint --edit "$1"'
