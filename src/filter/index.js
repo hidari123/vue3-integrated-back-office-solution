@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-05-31 10:05:49
  * @LastEditors: hidari
- * @LastEditTime: 2022-06-02 17:40:20
+ * @LastEditTime: 2022-06-06 18:07:42
  * @FilePath: \vue3-integrated-back-office-solution\src\filter\index.js
  * @Description: "过滤器"封装主文件
  *
@@ -35,6 +35,7 @@ const relativeTime = (val) => {
   if (!isNaN(val)) val = parseInt(val)
   // dayjs().to => 相对时间
   return dayjs()
+    // 处理国际化
     .locale(store.getters.language === 'zh' ? 'zh-cn' : 'en')
     .to(dayjs(val))
 }
