@@ -2,7 +2,7 @@
  * @Author: hidari
  * @Date: 2022-06-02 17:07:58
  * @LastEditors: hidari
- * @LastEditTime: 2022-06-06 18:00:18
+ * @LastEditTime: 2022-06-07 11:46:06
  * @FilePath: \vue3-integrated-back-office-solution\src\api\article.js
  * @Description: 文章相关接口
  *
@@ -39,4 +39,22 @@ export const deleteArticle = articleId => request({
  */
 export const articleDetail = (articleId) => request({
   url: `/article/${articleId}`
+})
+
+/**
+ * 创建文章
+ */
+export const createArticle = (data) => request({
+  url: '/article/create',
+  method: 'POST',
+  data
+})
+
+/**
+ * 编辑文章详情
+ */
+export const articleEdit = (data) => request({
+  url: '/article/edit',
+  method: 'POST',
+  data
 })
